@@ -31,13 +31,9 @@ namespace TagTag
         public void SetDetailItems(IEnumerable<IEntity> items) { detail.ItemsSource = items; }
 
         readonly ListView detail;
-        readonly MenuView menu, tagger;
+        readonly MenuView menu = new MenuView(), tagger = new MenuView();
         public App()
         {
-            tagger = new MenuView
-            {
-            };
-            menu = new MenuView { usetick = false };
             detail = new ListView
             {
                 HasUnevenRows = true,
