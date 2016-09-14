@@ -10,16 +10,14 @@ namespace TagTag.Backend
     {
         public event Action changed = delegate { };
         readonly IModel model;
-        readonly Func<ITag> createTag;
-        public EManProxy(IModel model, Func<ITag> createTag)
+        public EManProxy(IModel model)
         {
             this.model = model;
-            this.createTag = createTag;
         }
-        public T CreateEntity<T>() where T : IEntity
+        public T CreateEntity<T>(Object id) where T : IEntity
         {
-            var ret = model.eman.CreateEntity<T>();
-            var ct = createTag();
+            var ret = model.eman.CreateEntity<T>(null);
+            var ct = id as ITag;
             if (ct != null) model.AddTag(ret, ct);
             changed();
             return ret;

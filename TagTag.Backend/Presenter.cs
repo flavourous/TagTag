@@ -36,7 +36,7 @@ namespace TagTag.Backend
         readonly IView view;
 
         // Currently used strategies.
-        IMenuPresentationStrategy menuStrategy;
+        IMenuPresentationStrategy menuStrategy, taggerStrategy;
         IDetailPresentationStrategy detailStrategy;
 
         // Only constructable by that static above.
@@ -45,12 +45,13 @@ namespace TagTag.Backend
             this.model = model;
             this.view = view;
 
-            menuStrategy = new HierarchicalMenuPresentationStrategy(false);
+            taggerStrategy = new HierarchicalMenuPresentationStrategy(true); // possibly looks like decorator instead
+            menuStrategy = new HierarchicalMenuPresentationStrategy(false);  // of args there.
             detailStrategy = new NoTagFlowingDetailStrategy();
         }
 
         // Run presentation.
-        MenuPresenter main_menu;
+        MenuPresenter main_menu, tag_menu;
         EManProxy model_proxy;
         void Present()
         {
@@ -58,26 +59,16 @@ namespace TagTag.Backend
             main_menu = new MenuPresenter(view.menu, model, menuStrategy);
             main_menu.selected += Main_menu_selected;
 
+            // tag menu presenter
+            tag_menu = new MenuPresenter(view.tagger, model, taggerStrategy);
+
             // attach some stuff
-            model_proxy = new EManProxy(model, () => main_menu.head);
+            model_proxy = new EManProxy(model);
             model_proxy.changed += main_menu.Refresh;
             view.eman = model_proxy;
 
-            // when tagging we do
-            view.tagger += View_tagger;
-
             // use starting strategy to send menu
             main_menu.SelectEntity(null);
-
-        }
-
-        private void View_tagger(IEntity en, IMenu obj)
-        {
-            // so it's ready for data...but wtf are we tagging?!
-            var tag_menu_presenter = new MenuPresenter(en, obj, model, new HierarchicalMenuPresentationStrategy(true));
-            //fored strat.
-            tag_menu_presenter.SelectEntity(null); // rooty?
-            // yeah...carry on!
         }
 
         private void Main_menu_selected(IEntity en)

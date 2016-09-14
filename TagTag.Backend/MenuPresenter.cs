@@ -27,12 +27,15 @@ namespace TagTag.Backend
         }
 
         // For tagmenu
-        public MenuPresenter(IEntity tagging, IMenu menu, IModel model, IMenuPresentationStrategy strat) : this(menu, model, strat)
+        IEntity tagging;
+        public MenuPresenter(ITagMenu menu, IModel model, IMenuPresentationStrategy strat) : this(menu, model, strat)
         {
             // we're tagging that first argumentso....
-            isticked = tag => tagging.tags.Contains(tag as ITag);
+            menu.tagging += t => tagging = t;
+            isticked = tag => tagging != null && tagging.tags.Contains(tag as ITag);
             ticked = (tag, v) =>
             {
+                if (tagging == null) return;
                 if (v) model.AddTag(tagging, tag as ITag);
                 else model.RemoveTag(tagging, tag as ITag);
                 Refresh();
@@ -56,6 +59,7 @@ namespace TagTag.Backend
                 var menuItems = strat.GetItems(r, models, this);
                 view.SetMenuItems(menuItems);
                 view.SetTree(from rt in root select rt.name);
+                view.MenuID = r;
             }
             else esel = true;
             selected(en);

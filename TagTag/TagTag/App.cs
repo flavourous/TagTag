@@ -21,20 +21,22 @@ namespace TagTag
             throw new NotImplementedException();
         }
     }
+    
     public class App : Application, IView
     {
         public IEntityManager eman { get; set; }
 
         IMenu IView.menu { get { return menu; } }
-        public event Action<IEntity, IMenu> tagger;
-
-        
+        ITagMenu IView.tagger { get { return tagger; } }
         public void SetDetailItems(IEnumerable<IEntity> items) { detail.ItemsSource = items; }
 
         readonly ListView detail;
-        readonly MenuView menu;
+        readonly MenuView menu, tagger;
         public App()
         {
+            tagger = new MenuView
+            {
+            };
             menu = new MenuView { usetick = false };
             detail = new ListView
             {
@@ -94,7 +96,7 @@ namespace TagTag
 
         private void Create_Clicked(object sender, EventArgs e)
         {
-            var nn = eman.CreateEntity<INote>();
+            var nn = eman.CreateEntity<INote>(menu.MenuID);
             EditNote(nn);
         }
 

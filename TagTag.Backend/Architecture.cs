@@ -6,9 +6,9 @@ namespace TagTag.Backend
 {
     public interface IView
     {
-        event Action<IEntity, IMenu> tagger;
         IEntityManager eman { set; }
         IMenu menu { get; }
+        ITagMenu tagger { get; }
         void SetDetailItems(IEnumerable<IEntity> items);
     }
     public interface IMenu
@@ -16,6 +16,11 @@ namespace TagTag.Backend
         event Action MenuBack;
         void SetMenuItems(IEnumerable<IMenuItem> items);
         void SetTree(IEnumerable<String> tree);
+        Object MenuID { set; }
+    }
+    public interface ITagMenu : IMenu
+    {
+        event Action<IEntity> tagging;
     }
     public interface IMenuItem
     {
@@ -33,6 +38,9 @@ namespace TagTag.Backend
     }
     public interface IEntityHooks
     {
+        Action<IEntity> activated { get; }
+        Action<IEntity, bool> ticked { get; }
+        Func<IEntity, bool> isticked { get; }
     }
     public interface IModel
     {
@@ -43,7 +51,7 @@ namespace TagTag.Backend
     }
     public interface IEntityManager
     {
-        T CreateEntity<T>() where T : IEntity;
+        T CreateEntity<T>(Object id) where T : IEntity;
         void DeleteEntity(IEntity d);
         IEntity UpdateEntity(IEntity e);
     }
