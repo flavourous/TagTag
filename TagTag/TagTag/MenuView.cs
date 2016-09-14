@@ -12,6 +12,7 @@ namespace TagTag
     {
         Label tree = new Label { Text = ">" };
         ListView menu;
+        public IEnumerable<MenuItem> mi;
         public MenuView()
         {
             Button back = new Button { Text = "Back", Command = new Command(() => MenuBack()) };
@@ -34,6 +35,10 @@ namespace TagTag
                         l.SetBinding(Label.TextProperty, "entity.name");
                         c = new ViewCell { View = l };
                     }
+
+                    // injected items
+                    if (mi != null) foreach (var m in mi) c.ContextActions.Add(m);
+
                     return c;
                 })
             };

@@ -65,6 +65,7 @@ namespace TagTag.Backend
             // attach some stuff
             model_proxy = new EManProxy(model);
             model_proxy.changed += main_menu.Refresh;
+            model_proxy.changed += tag_menu.Refresh;
             view.eman = model_proxy;
 
             // use starting strategy to send menu

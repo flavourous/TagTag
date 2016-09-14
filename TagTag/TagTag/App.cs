@@ -27,13 +27,26 @@ namespace TagTag
         public IEntityManager eman { get; set; }
 
         IMenu IView.menu { get { return menu; } }
-        ITagMenu IView.tagger { get { return tagger; } }
+        ITagMenu IView.tagger { get { return taggerPage.menu; } }
         public void SetDetailItems(IEnumerable<IEntity> items) { detail.ItemsSource = items; }
 
+        void TagIt(IEntity en)
+        {
+            taggerPage.Title = "Tagging " + en.name;
+            taggerPage.OnTagging(en);
+            MainPage.Navigation.PushAsync(taggerPage);
+        }
+
         readonly ListView detail;
-        readonly MenuView menu = new MenuView(), tagger = new MenuView();
+        readonly MenuView menu = new MenuView();
+        readonly TaggerPage taggerPage = new TaggerPage();
         public App()
         {
+            var tag = new MenuItem { Text = "Tag" };
+            tag.Clicked += Tag_Clicked;
+            menu.mi = new MenuItem[] { tag };
+            taggerPage.addTag += TaggerPage_addTag;
+
             detail = new ListView
             {
                 HasUnevenRows = true,
@@ -62,6 +75,7 @@ namespace TagTag
                     edit.Clicked += Edit_Clicked;
                     var delete = new MenuItem { Text = "Delete" };
                     delete.Clicked += Delete_Clicked;
+                    
                     return new ViewCell
                     {
                         View = sl,
@@ -86,6 +100,20 @@ namespace TagTag
                 }
             };
             MainPage = new NavigationPage(mdp);
+        }
+
+        private void TaggerPage_addTag(string obj)
+        {
+            var tag = eman.CreateEntity<ITag>(taggerPage.menu.MenuID);
+            tag.name = obj;
+            eman.UpdateEntity(tag);
+        }
+
+        private void Tag_Clicked(object sender, EventArgs e)
+        {
+            var bo = (sender as BindableObject).BindingContext;
+            if (bo is IMenuItem) bo = (bo as IMenuItem).entity;
+            TagIt(bo as IEntity);
         }
 
         NoteEditor ned = new NoteEditor();
