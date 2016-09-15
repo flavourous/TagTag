@@ -36,15 +36,34 @@ namespace TagTag
             taggerPage.OnTagging(en);
             MainPage.Navigation.PushAsync(taggerPage);
         }
+	void CreateOrEditTag(ITag tag)
+	{
+	    if(tag == null)
+	    	tag = eman.CreateEntity<ITag>(menu.MenuID);
+
+            ren.SetNote(tag.name, s => {
+	    	tag.name = s;
+		eman.UpdateEntity(tag);
+	    });
+            MainPage.Navigation.PushModalAsync(ren);
+	}
 
         readonly ListView detail;
         readonly MenuView menu = new MenuView();
         readonly TaggerPage taggerPage = new TaggerPage();
+        readonly NoteEditor ned = new NoteEditor();
+	readonly Renamer ren = new Renamer();
         public App()
         {
             var tag = new MenuItem { Text = "Tag" };
             tag.Clicked += Tag_Clicked;
-            menu.mi = new MenuItem[] { tag };
+            var edit = new MenuItem { Text = "Edit" };
+            edit.Clicked += Edit_Clicked;
+            var delete = new MenuItem { Text = "Delete" };
+            delete.Clicked += Delete_Clicked;
+            
+            menu.mi = new MenuItem[] { tag, edit, delete };
+	    taggerPage.mi = new MenuItem[] { edit };
             taggerPage.addTag += TaggerPage_addTag;
 
             detail = new ListView
@@ -71,15 +90,10 @@ namespace TagTag
                     t.SetBinding(Label.TextProperty, "text", BindingMode.Default, new Tnc());
                     d.SetBinding(Label.TextProperty, "created", BindingMode.Default, null, "dd/MM/yy");
 
-                    var edit = new MenuItem { Text = "Edit" };
-                    edit.Clicked += Edit_Clicked;
-                    var delete = new MenuItem { Text = "Delete" };
-                    delete.Clicked += Delete_Clicked;
-                    
                     return new ViewCell
                     {
                         View = sl,
-                        ContextActions = { edit, delete }
+                        ContextActions = { tag, edit, delete }
                     };
                 })
             };
@@ -109,30 +123,39 @@ namespace TagTag
             eman.UpdateEntity(tag);
         }
 
-        private void Tag_Clicked(object sender, EventArgs e)
-        {
+	IEntity GetEnt(Object sender)
+	{
             var bo = (sender as BindableObject).BindingContext;
             if (bo is IMenuItem) bo = (bo as IMenuItem).entity;
-            TagIt(bo as IEntity);
-        }
+	    return bo as IEntity;
+	}
 
-        NoteEditor ned = new NoteEditor();
+        private void Tag_Clicked(object sender, EventArgs e)
+        {
+            TagIt(GetEnt(sender));
+        }
 
         private void Create_Clicked(object sender, EventArgs e)
         {
-            var nn = eman.CreateEntity<INote>(menu.MenuID);
-            EditNote(nn);
+	    var result = MainPage.DisplayActionSheet("Cancel", null, "Note", "Tag");
+	    if(result == "Tag") CreateOrEditTag(null); // can use TagIt for multi-add
+	    else if(result == "Note")
+	    {
+                var nn = eman.CreateEntity<INote>(menu.MenuID);
+                EditNote(nn);
+	    }
         }
 
         private void Delete_Clicked(object sender, EventArgs e)
         {
-            eman.DeleteEntity((sender as BindableObject).BindingContext as IEntity);
+            eman.DeleteEntity(GetEnt(sender));
         }
 
         private void Edit_Clicked(object sender, EventArgs e)
         {
-            var ent = (sender as BindableObject).BindingContext as IEntity;
-            EditNote(ent as INote);
+	    var ent = GetEnt(sender);
+	    if(ent is INote) EditNote(ent as INote);
+	    else if(ent is ITag) CreateOrEditTag(ent as ITag);
         }
 
         void EditNote(INote n)
@@ -140,15 +163,6 @@ namespace TagTag
             ned.SetNote(n, () => eman.UpdateEntity(n));
             MainPage.Navigation.PushAsync(ned);
         }
-
-
-        //void MenuMode(Object o)
-        //{
-        //    var md = MainPage as MasterDetailPage;
-        //    md.MasterBehavior = md.MasterBehavior == MasterBehavior.Popover ? MasterBehavior.Split : MasterBehavior.Popover;
-        //    sp.Text = md.MasterBehavior == MasterBehavior.Popover ? "Split" : "Popover";
-        //}
-
 
         protected override void OnStart()
         {
