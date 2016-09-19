@@ -41,6 +41,7 @@
     <Compile Include="App.cs" />
     <Compile Include="MenuView.cs" />
     <Compile Include="NoteEditor.cs" />
+    <Compile Include="NRNameview.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TaggerPage.cs" />
   </ItemGroup>
@@ -59,7 +60,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="GettingStarted.Xamarin" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

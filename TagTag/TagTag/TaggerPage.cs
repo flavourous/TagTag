@@ -14,15 +14,13 @@ namespace TagTag
         public readonly MenuView menu = new MenuView();
         public TaggerPage()
         {
-            Entry tagname = new Entry { Placeholder = "Enter tag name" };
+            Entry tagname = new Entry { Placeholder = "Enter tag name", VerticalOptions = LayoutOptions.End };
             Button add = new Button { Text = "Add", Command = new Command(() => addTag(tagname.Text)) };
 
             Grid.SetColumn(add, 1);
             Grid.SetColumnSpan(menu, 2);
             Grid.SetRow(tagname, 1);
             Grid.SetRow(add, 1);
-
-         
 
             Content = new Grid
             {

@@ -57,6 +57,7 @@ namespace TagTag.Backend
     }
     public interface IEntity
     {
+        DateTime created { get; }
         String name { get; set; }
         IEnumerable<ITag> tags { get; }
     }

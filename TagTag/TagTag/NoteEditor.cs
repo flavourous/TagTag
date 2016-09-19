@@ -27,17 +27,12 @@ namespace TagTag
             };
             etext.SetBinding(Editor.TextProperty, "text", BindingMode.TwoWay);
 
-            var save = new Button { Text = "Save", VerticalOptions = LayoutOptions.End };
-            save.Clicked += (s, e) =>
-            {
-                commit();
-                Navigation.PopAsync();
-            };
+            ToolbarItems.Add(new ToolbarItem() { Text = "Save", Command = new Command(() => commit()) });
 
             Content = new StackLayout
             {
                 Orientation = StackOrientation.Vertical,
-                Children = { ename, etext, save }
+                Children = { ename, etext }
             };
         }
     }

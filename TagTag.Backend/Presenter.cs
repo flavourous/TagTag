@@ -63,6 +63,7 @@ namespace TagTag.Backend
             tag_menu = new MenuPresenter(view.tagger, model, taggerStrategy);
 
             // attach some stuff
+            LinkMenuPresenters(main_menu, tag_menu);
             model_proxy = new EManProxy(model);
             model_proxy.changed += main_menu.Refresh;
             model_proxy.changed += tag_menu.Refresh;
@@ -70,6 +71,16 @@ namespace TagTag.Backend
 
             // use starting strategy to send menu
             main_menu.SelectEntity(null);
+        }
+
+        void LinkMenuPresenters(params MenuPresenter[] pres)
+        {
+            foreach (var p in pres)
+                p.changed += () =>
+                {
+                    foreach (var pr in pres)
+                        pr.Refresh();
+                };
         }
 
         private void Main_menu_selected(IEntity en)

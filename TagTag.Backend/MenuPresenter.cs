@@ -28,17 +28,22 @@ namespace TagTag.Backend
 
         // For tagmenu
         IEntity tagging;
-        public MenuPresenter(ITagMenu menu, IModel model, IMenuPresentationStrategy strat) : this(menu, model, strat)
+        public event Action changed = delegate { };
+        public MenuPresenter(ITagMenu menu, IModel model, IMenuPresentationStrategy strat) : this(menu as IMenu, model, strat)
         {
             // we're tagging that first argumentso....
-            menu.tagging += t => tagging = t;
+            menu.tagging += t =>
+            {
+                tagging = t;
+                Refresh();
+            };
             isticked = tag => tagging != null && tagging.tags.Contains(tag as ITag);
             ticked = (tag, v) =>
             {
                 if (tagging == null) return;
                 if (v) model.AddTag(tagging, tag as ITag);
                 else model.RemoveTag(tagging, tag as ITag);
-                Refresh();
+                changed();
             };
         }
 
@@ -50,6 +55,7 @@ namespace TagTag.Backend
         public void SelectEntity(IEntity en)
         {
             var models = model.GetEntities();
+            models = models.Where(e => e != tagging);
 
             if (en is ITag || en == null)
             {

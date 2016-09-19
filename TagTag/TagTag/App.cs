@@ -21,14 +21,27 @@ namespace TagTag
             throw new NotImplementedException();
         }
     }
-    
+
     public class App : Application, IView
     {
         public IEntityManager eman { get; set; }
 
         IMenu IView.menu { get { return menu; } }
         ITagMenu IView.tagger { get { return taggerPage.menu; } }
-        public void SetDetailItems(IEnumerable<IEntity> items) { detail.ItemsSource = items; }
+        class DH
+        {
+            public DH(IEntity e){this.e = e;}
+            public readonly IEntity e;
+            public String namedate { get { return e.name + " - " + e.created.ToString("dd/MM/yyyy"); } }
+            public String deets
+            {
+                get
+                {
+                    return e is INote ? (e as INote).text : "";
+                }
+            }
+        }
+        public void SetDetailItems(IEnumerable<IEntity> items) { detail.ItemsSource = from d in items select new DH(d); }
 
         void TagIt(IEntity en)
         {
@@ -36,34 +49,48 @@ namespace TagTag
             taggerPage.OnTagging(en);
             MainPage.Navigation.PushAsync(taggerPage);
         }
-	void CreateOrEditTag(ITag tag)
-	{
-	    if(tag == null)
-	    	tag = eman.CreateEntity<ITag>(menu.MenuID);
 
-            ren.SetNote(tag.name, s => {
-	    	tag.name = s;
-		eman.UpdateEntity(tag);
-	    });
-            MainPage.Navigation.PushModalAsync(ren);
-	}
+        void CEditTag(ITag tag)
+        {
+            if (tag == null)
+                tag = eman.CreateEntity<ITag>(menu.MenuID);
+
+            rv.Edit(tag.name, s =>
+            {
+                tag.name = s;
+                eman.UpdateEntity(tag);
+            });
+        }
 
         readonly ListView detail;
         readonly MenuView menu = new MenuView();
         readonly TaggerPage taggerPage = new TaggerPage();
         readonly NoteEditor ned = new NoteEditor();
-	readonly Renamer ren = new Renamer();
+
+        class CEA  : EventArgs
+        {
+            public EventArgs inner;
+            public Cell c;
+        }
+        Func<Cell, MenuItem> Generate(String name, EventHandler hand)
+        {
+            return c =>
+            {
+                var mi = new MenuItem { Text = name };
+                mi.Clicked += (o, e) => hand(o, new CEA { inner = e, c = c });
+                return mi;
+            };
+        }
+
+        NRNameview rv = new NRNameview();
         public App()
         {
-            var tag = new MenuItem { Text = "Tag" };
-            tag.Clicked += Tag_Clicked;
-            var edit = new MenuItem { Text = "Edit" };
-            edit.Clicked += Edit_Clicked;
-            var delete = new MenuItem { Text = "Delete" };
-            delete.Clicked += Delete_Clicked;
-            
-            menu.mi = new MenuItem[] { tag, edit, delete };
-	    taggerPage.mi = new MenuItem[] { edit };
+            var tag = Generate("Tag", Tag_Clicked);
+            var edit = Generate("Edit", Edit_Clicked);
+            var delete = Generate("Delete", Delete_Clicked);
+
+            menu.mi = new [] { tag, edit, delete };
+	        taggerPage.menu.mi = new [] { edit };
             taggerPage.addTag += TaggerPage_addTag;
 
             detail = new ListView
@@ -71,34 +98,18 @@ namespace TagTag
                 HasUnevenRows = true,
                 ItemTemplate = new DataTemplate(() =>
                 {
-                    Label l = new Label(), t = new Label(), d = new Label();
-                    // FIXME use grid. want xamhelperslib. usemore converters.
-                    var sl = new StackLayout
-                    {
-                        Orientation = StackOrientation.Vertical,
-                        Children =
-                        {
-                            new StackLayout
-                            {
-                                Orientation = StackOrientation.Horizontal,
-                                Children = {l, new  Label { Text = " - " }, d }
-                            },
-                            t
-                        }
-                    };
-                    l.SetBinding(Label.TextProperty, "name");
-                    t.SetBinding(Label.TextProperty, "text", BindingMode.Default, new Tnc());
-                    d.SetBinding(Label.TextProperty, "created", BindingMode.Default, null, "dd/MM/yy");
-
-                    return new ViewCell
-                    {
-                        View = sl,
-                        ContextActions = { tag, edit, delete }
-                    };
+                    var c = new TextCell();
+                    c.SetBinding(TextCell.TextProperty, "namedate");
+                    c.SetBinding(TextCell.DetailProperty, "deets");
+                    c.ContextActions.Add(tag(c));
+                    c.ContextActions.Add(edit(c));
+                    c.ContextActions.Add(delete(c));
+                    return c;
                 })
             };
             ToolbarItem create = new ToolbarItem { Text = "New" };
             create.Clicked += Create_Clicked;
+
             var mdp = new MasterDetailPage
             {
                 ToolbarItems = { create },
@@ -106,7 +117,11 @@ namespace TagTag
                 Master = new ContentPage
                 {
                     Title = "TagTag",
-                    Content = menu
+                    Content = new Grid {
+                        Children = {
+                            menu, rv
+                        }
+                    }
                 },
                 Detail = new ContentPage
                 {
@@ -116,6 +131,8 @@ namespace TagTag
             MainPage = new NavigationPage(mdp);
         }
 
+        
+
         private void TaggerPage_addTag(string obj)
         {
             var tag = eman.CreateEntity<ITag>(taggerPage.menu.MenuID);
@@ -123,27 +140,24 @@ namespace TagTag
             eman.UpdateEntity(tag);
         }
 
-	IEntity GetEnt(Object sender)
-	{
+        IEntity GetEnt(Object sender)
+        {
             var bo = (sender as BindableObject).BindingContext;
             if (bo is IMenuItem) bo = (bo as IMenuItem).entity;
-	    return bo as IEntity;
-	}
+            if (bo is DH) bo = (bo as DH).e;
+            return bo as IEntity;
+        }
 
         private void Tag_Clicked(object sender, EventArgs e)
         {
             TagIt(GetEnt(sender));
         }
 
-        private void Create_Clicked(object sender, EventArgs e)
+        private async void Create_Clicked(object sender, EventArgs e)
         {
-	    var result = MainPage.DisplayActionSheet("Cancel", null, "Note", "Tag");
-	    if(result == "Tag") CreateOrEditTag(null); // can use TagIt for multi-add
-	    else if(result == "Note")
-	    {
-                var nn = eman.CreateEntity<INote>(menu.MenuID);
-                EditNote(nn);
-	    }
+            var result = await MainPage.DisplayActionSheet("New", "Cancel", null, "Note", "Tag");
+            if (result == "Tag") CEditTag(null);
+            else if (result == "Note") CEditNote(null);
         }
 
         private void Delete_Clicked(object sender, EventArgs e)
@@ -153,14 +167,21 @@ namespace TagTag
 
         private void Edit_Clicked(object sender, EventArgs e)
         {
-	    var ent = GetEnt(sender);
-	    if(ent is INote) EditNote(ent as INote);
-	    else if(ent is ITag) CreateOrEditTag(ent as ITag);
+            var ent = GetEnt(sender);
+            if (ent is INote) CEditNote(ent as INote);
+            else if (ent is ITag) CEditTag(ent as ITag);
         }
 
-        void EditNote(INote n)
+        void CEditNote(INote n)
         {
-            ned.SetNote(n, () => eman.UpdateEntity(n));
+            if (n == null)
+                n = eman.CreateEntity<INote>(menu.MenuID);
+
+            ned.SetNote(n, () =>
+            {
+                eman.UpdateEntity(n);
+                MainPage.Navigation.PopAsync();
+            });
             MainPage.Navigation.PushAsync(ned);
         }
 

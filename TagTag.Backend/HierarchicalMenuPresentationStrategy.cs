@@ -36,9 +36,12 @@ namespace TagTag.Backend
         public HierarchicalMenuPresentationStrategy(bool tagsonly) { this.tagsonly = tagsonly; }
         public IEnumerable<IMenuItem> GetItems(ITag root, IEnumerable<IEntity> models, IEntityHooks hooks)
         {
-            return from m in models
+            var ret = from m in models
                    where ((root == null && m.tags.Count() == 0) || m.tags.Contains(root)) && (!tagsonly || m is ITag)
                    select new HMi(m, hooks);
+            if (!tagsonly && ret.Count() == 0 && ret.First().entity is ITag)
+                return GetItems(ret.First().entity as ITag, models, hooks);
+            return ret;
         }
     }
 }

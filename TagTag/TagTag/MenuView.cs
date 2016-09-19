@@ -10,13 +10,12 @@ namespace TagTag
 {
     public class MenuView : ContentView, ITagMenu
     {
-        Label tree = new Label { Text = ">" };
+        Label tree = new Label { Text = ">", VerticalOptions = LayoutOptions.Center };
         ListView menu;
-        public IEnumerable<MenuItem> mi;
+        public IEnumerable<Func<Cell, MenuItem>> mi;
         public MenuView()
         {
             Button back = new Button { Text = "Back", Command = new Command(() => MenuBack()) };
-
             menu = new ListView
             {
                 HasUnevenRows = true,
@@ -25,9 +24,18 @@ namespace TagTag
                     Cell c = null;
                     if (usetick)
                     {
-                        c = new SwitchCell();
-                        c.SetBinding(SwitchCell.TextProperty, "entity.name");
-                        c.SetBinding(SwitchCell.OnProperty, "ticked");
+                        Label l = new Label { HorizontalOptions = LayoutOptions.StartAndExpand, VerticalOptions = LayoutOptions.Center };
+                        l.SetBinding(Label.TextProperty, "entity.name");
+                        Switch s = new Switch { HorizontalOptions = LayoutOptions.End };
+                        s.SetBinding(Switch.IsToggledProperty, "ticked");
+                        c = new ViewCell
+                        {
+                            View = new StackLayout
+                            {
+                                Children = { l, s },
+                                Orientation = StackOrientation.Horizontal
+                            }
+                        };
                     }
                     else
                     {
@@ -35,10 +43,9 @@ namespace TagTag
                         l.SetBinding(Label.TextProperty, "entity.name");
                         c = new ViewCell { View = l };
                     }
-
                     // injected items
-                    if (mi != null) foreach (var m in mi) c.ContextActions.Add(m);
-
+                    if (mi != null) foreach (var m in mi) c.ContextActions.Add(m(c));
+                    c.Tapped += C_Tapped;
                     return c;
                 })
             };
@@ -61,6 +68,12 @@ namespace TagTag
                 },
                 Children = { tree, back, menu }
             };
+        }
+
+        private void C_Tapped(object sender, EventArgs e)
+        {
+            var ent = (sender as BindableObject).BindingContext as IMenuItem;
+            ent.Activate();
         }
 
         bool usetick = false;
