@@ -67,6 +67,7 @@ namespace TagTag.Backend
     }
     class MockTag : EntBase, ITag
     {
+
     }
     class MockModel : IModel
     {

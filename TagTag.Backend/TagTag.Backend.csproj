@@ -42,6 +42,8 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
     <Compile Include="EntityManagerPresentationProxy.cs" />
     <Compile Include="Helpers.cs" />
+    <Compile Include="ModelSQLite.cs" />
+    <Compile Include="Platform.cs" />
     <Compile Include="Presenter.Test.cs" />
     <Compile Include="MenuPresenter.cs" />
   </ItemGroup>
@@ -52,6 +54,15 @@
     <Compile Include="NoTagFlowingDetailStrategy.cs" />
     <Compile Include="Presenter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="SQLite.Net, Version=3.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SQLite.Net-PCL.3.1.1\lib\portable-win8+net45+wp8+wpa81+MonoAndroid1+MonoTouch1\SQLite.Net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

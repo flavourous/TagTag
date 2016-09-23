@@ -82,9 +82,12 @@ namespace TagTag
             };
         }
 
+        readonly IPlatform platform;
         NRNameview rv = new NRNameview();
-        public App()
+        public App(IPlatform platform)
         {
+            this.platform = platform;
+
             var tag = Generate("Tag", Tag_Clicked);
             var edit = Generate("Edit", Edit_Clicked);
             var delete = Generate("Delete", Delete_Clicked);
@@ -188,7 +191,7 @@ namespace TagTag
         protected override void OnStart()
         {
             /* Handle when your app starts*/
-            Presenter.Start(this);
+            Presenter.Start(this, platform);
         }
         protected override void OnSleep() {/* Handle when your app sleeps*/}
         protected override void OnResume() {/* Handle when your app resumes*/}

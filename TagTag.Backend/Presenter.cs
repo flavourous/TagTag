@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,24 +9,24 @@ namespace TagTag.Backend
 {
     public class Presenter
     {
-        public static void RunTests()
+        public static void RunTests(IPlatform plat)
         {
             var pt = new PresenterTester((m, v) =>
             {
-                var p = new Presenter(m, v);
+                var p = new Presenter(m, v, plat);
                 p.Present();
                 return p;
-            });
+            }, plat);
             pt.Run();
         }
 
         // Static initator.  Could be Singleton.
-        public static void Start(IView initiator)
+        public static void Start(IView initiator, IPlatform platform)
         {
             // We'll get the remaining bits of the triad
-            IModel model = PresenterTester.GenerateMock();
+            IModel model = new ModelSQLite(platform);
 
-            Presenter presenter = new Presenter(model, initiator);
+            Presenter presenter = new Presenter(model, initiator, platform);
 
             // then begin
             presenter.Present();
@@ -40,8 +41,10 @@ namespace TagTag.Backend
         IDetailPresentationStrategy detailStrategy;
 
         // Only constructable by that static above.
-        private Presenter(IModel model, IView view)
+        readonly IPlatform platform;
+        private Presenter(IModel model, IView view, IPlatform platform)
         {
+            this.platform = platform;
             this.model = model;
             this.view = view;
 
@@ -55,6 +58,7 @@ namespace TagTag.Backend
         EManProxy model_proxy;
         void Present()
         {
+            
             // main menu presenter
             main_menu = new MenuPresenter(view.menu, model, menuStrategy);
             main_menu.selected += Main_menu_selected;

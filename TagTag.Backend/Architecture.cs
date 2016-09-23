@@ -55,6 +55,15 @@ namespace TagTag.Backend
         void DeleteEntity(IEntity d);
         IEntity UpdateEntity(IEntity e);
     }
+
+    // I was tempted by an ES approach, but decided a normal ORM modelling 
+    // approach in the end.  One entity being any number of things is useful - i.e.
+    // a note, a few photos and a couple recordings.  You can get the polymorphism
+    // with this approach, but have to do IMultiEntity : IEntity for the multivalued
+    // entries on the same type of thing.  Though you gain simplified presentation, eg here we
+    // couldnt have INote : IEntity.  It's be INote[] INoteSystem.GetNotes(IEntity id).
+    //
+    // The model implimentation will probabbly still look like an ES however.
     public interface IEntity
     {
         DateTime created { get; }
@@ -64,6 +73,12 @@ namespace TagTag.Backend
     public interface ITag : IEntity
     {
 
+    }
+    // The only reason for it to be generic is so that it could be implimented
+    // many times on an object for different types. Encoding type info.
+    public interface IManyEntity<T> where T : IEntity
+    {
+        IEnumerable<T> entities { get; }
     }
     public interface INote : IEntity
     {

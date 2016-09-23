@@ -41,8 +41,10 @@ namespace TagTag.Backend
             ticked = (tag, v) =>
             {
                 if (tagging == null) return;
-                if (v) model.AddTag(tagging, tag as ITag);
-                else model.RemoveTag(tagging, tag as ITag);
+                var taggy = tag as ITag;
+                if (v) model.AddTag(tagging, taggy);
+                else model.RemoveTag(tagging, taggy);
+                model.eman.UpdateEntity(taggy);
                 changed();
             };
         }

@@ -18,8 +18,11 @@ namespace TagTag.Backend
         {
             var ret = model.eman.CreateEntity<T>(null);
             var ct = id as ITag;
-            if (ct != null) model.AddTag(ret, ct);
-            changed();
+            if (ct != null)
+            {
+                model.AddTag(ret, ct);
+                rootTagsToUpdate[ret] = ct;
+            }
             return ret;
         }
         public void DeleteEntity(IEntity e)
@@ -27,9 +30,15 @@ namespace TagTag.Backend
             model.eman.DeleteEntity(e);
             changed();
         }
+        Dictionary<IEntity, ITag> rootTagsToUpdate = new Dictionary<IEntity, ITag>();
         public IEntity UpdateEntity(IEntity e)
         {
             var ret = model.eman.UpdateEntity(e);
+            if(rootTagsToUpdate.ContainsKey(e))
+            {
+                model.eman.UpdateEntity(rootTagsToUpdate[e]);
+                rootTagsToUpdate.Remove(e);
+            }
             changed();
             return ret;
         }

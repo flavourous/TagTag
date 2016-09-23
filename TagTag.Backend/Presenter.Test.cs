@@ -46,16 +46,20 @@ namespace TagTag.Backend
         {
             var en = m.eman.CreateEntity<T>(root);
             en.name = name;
-            foreach (var t in tags) m.AddTag(en, t);
+            foreach (var t in tags)
+            {
+                m.AddTag(en, t);
+                m.eman.UpdateEntity(t);
+            }
             return (T)m.eman.UpdateEntity(en);
         }
     }
 
     class PresenterTester
     {
-        public static MockModel GenerateMock()
+        public static IModel GenerateMock(IModel model = null)
         {
-            var model = new MockModel();
+            if (model == null) model = new MockModel();
 
             var t1 = model.CreateAs<ITag>(null,"tag 1");
             var t2 = model.CreateAs<ITag>(null,"tag 2");
@@ -71,21 +75,21 @@ namespace TagTag.Backend
         }
 
         readonly Func<IModel, IView, Presenter> create;
-        public PresenterTester(Func<IModel, IView, Presenter> create) { this.create = create; }
+        readonly IPlatform plat;
+        public PresenterTester(Func<IModel, IView, Presenter> create, IPlatform plat) { this.create = create; this.plat = plat; }
         public void Run()
         {
             var view = new ManualView();
-            var model = GenerateMock();
-
+            var model = GenerateMock(new ModelSQLite(plat));
             var presenter = create(model, view);
 
-			// Check dat initial setup
+            // Check dat initial setup
             Debug.Assert(view.mm.menu.Count() == 4);
             Debug.Assert(view.detail.Count() == 2);
-            view.mm.menu.First().Activate(); // t1
+            view.mm.menu.Where(m=>m.entity.name == "tag 1").First().Activate(); // t1
             Debug.Assert(view.mm.menu.Count() == 3);
             Debug.Assert(view.detail.Count() == 2);
-            view.mm.menu.First().Activate(); // t3
+            view.mm.menu.Where(m => m.entity.name == "tag 3").First().Activate(); // t3
             Debug.Assert(view.mm.menu.Count() == 1);
             Debug.Assert(view.detail.Count() == 1);
             view.mm.GoMenuBack();
@@ -99,15 +103,15 @@ namespace TagTag.Backend
             Debug.Assert(view.detail.Count() == 2);
 
             // picking flatly from allentities here
-            var n2 = model.GetEntities().ElementAt(4) as INote;
-            var n1 = model.GetEntities().ElementAt(3) as INote;
-            var t1 = model.GetEntities().ElementAt(0) as ITag;
+            var n2 = model.GetEntities().Where(f => f.name == "note 2").First() as INote;
+            var n1 = model.GetEntities().Where(f => f.name == "note 1").First() as INote;
+            var t1 = model.GetEntities().Where(f => f.name == "tag 1").First() as ITag;
 
             // Test updating
             n2.name = "Totally - lol";
             n2.text = "HAH";
             view.eman.UpdateEntity(n2);
-            Debug.Assert(view.mm.menu.ElementAt(3).entity.name == n2.name);
+            Debug.Assert(view.mm.menu.Count(f => f.entity.name == "Totally - lol") == 1);
 
 			// test deleting
             view.eman.DeleteEntity(n2);
@@ -121,6 +125,13 @@ namespace TagTag.Backend
             Debug.Assert(view.mm.menu.Count() == 6);
             Debug.Assert(view.detail.Count() == 4);
 
+            // adding gets default tag on normal menu
+            view.mm.menu.Where(m => m.entity.name == "tag 1").First().Activate(); // t1
+            var dtts = "Testing that we get the tag based on menu position";
+            view.eman.CreateAs<INote>(view.mm.MenuID, dtts);
+            Debug.Assert(view.mm.menu.Count(d => d.entity.name == dtts) == 1);
+
+
             // hmm lets test running the tag menu
             var ttm = view.tm;
             ttm.OnTagging(n1);
@@ -128,12 +139,18 @@ namespace TagTag.Backend
             Debug.Assert(ttm.menu.All(a => a.entity is ITag));
             Debug.Assert(ttm.menu.All(a => !a.ticked));
             Debug.Assert(ttm.menu.Count() == 2);
-            ttm.menu.ElementAt(0).ticked = true;
-            Debug.Assert(ttm.menu.ElementAt(0).entity == t1); // cause lol test fail
+            ttm.menu.Where(d=>d.entity.Equals(t1)).First().ticked = true;
             Debug.Assert(n1.tags.Contains(t1));
             // and does it present it back?
             ttm.OnTagging(n1); // starts the tagpresenter!
             Debug.Assert(ttm.menu.ElementAt(0).ticked);
+            // check tag menu is organized correctly
+            view.tm.menu.Where(m => m.entity.name == "tag 1").First().Activate(); // t1
+            Debug.Assert(view.tm.menu.Count() == 1);
+            // check added tag is tagged
+            var tt = "Testing tag";
+            view.eman.CreateAs<ITag>(view.tm.MenuID, tt);
+            Debug.Assert(view.tm.menu.Count(d => d.entity.name == tt) == 1);
         }
     }
 }
