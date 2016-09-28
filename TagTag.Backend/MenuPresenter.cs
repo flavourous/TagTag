@@ -57,7 +57,7 @@ namespace TagTag.Backend
         public void SelectEntity(IEntity en)
         {
             var models = model.GetEntities();
-            models = models.Where(e => e != tagging);
+            models = models.Where(e => !e.Equals(tagging));
 
             if (en is ITag || en == null)
             {
@@ -66,7 +66,7 @@ namespace TagTag.Backend
                 if (root.PeekNull() != r) root.Push(r);
                 var menuItems = strat.GetItems(r, models, this);
                 view.SetMenuItems(menuItems);
-                view.SetTree(from rt in root select rt.name);
+                view.SetTree((from rt in root select rt.name).Reverse());
                 view.MenuID = r;
             }
             else esel = true;

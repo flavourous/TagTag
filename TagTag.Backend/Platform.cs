@@ -10,6 +10,7 @@ namespace TagTag.Backend
 {
     public interface IPlatform
     {
+        void WriteLine(String s);
         ISQLitePlatform sqlite { get; }
         String AppData { get; }
         void DeleteFile(String path);

@@ -29,7 +29,7 @@ namespace TagTag.Droid
         {
             get
             {
-                return System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData);
+                return Android.OS.Environment.ExternalStorageDirectory.AbsolutePath;
             }
         }
 
@@ -49,6 +49,11 @@ namespace TagTag.Droid
 
 
         public Stream ReadFile(string path)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WriteLine(string s)
         {
             throw new NotImplementedException();
         }

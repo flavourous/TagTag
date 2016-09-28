@@ -39,6 +39,11 @@ namespace ConsoleRunner
         {
             throw new NotImplementedException();
         }
+
+        public void WriteLine(string s)
+        {
+            Console.WriteLine(s);
+        }
     }
     class Program 
     {

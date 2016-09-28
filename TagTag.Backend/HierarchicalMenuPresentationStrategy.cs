@@ -38,9 +38,8 @@ namespace TagTag.Backend
         {
             var ret = from m in models
                    where ((root == null && m.tags.Count() == 0) || m.tags.Contains(root)) && (!tagsonly || m is ITag)
+                   orderby m is ITag descending
                    select new HMi(m, hooks);
-            if (!tagsonly && ret.Count() == 1 && ret.First().entity is ITag)
-                return GetItems(ret.First().entity as ITag, models, hooks);
             return ret;
         }
     }

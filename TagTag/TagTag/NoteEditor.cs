@@ -18,7 +18,7 @@ namespace TagTag
         Action commit;
         public NoteEditor()
         {
-            var ename = new Entry { VerticalOptions = LayoutOptions.Start };
+            var ename = new Entry { VerticalOptions = LayoutOptions.Start, Placeholder = "Name" };
             ename.SetBinding(Entry.TextProperty, "name", BindingMode.TwoWay);
 
             var etext = new Editor

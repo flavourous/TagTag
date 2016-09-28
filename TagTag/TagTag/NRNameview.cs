@@ -30,7 +30,7 @@ namespace TagTag
         }
         public NRNameview()
         {
-            ren = new Entry();
+            ren = new Entry { MinimumHeightRequest = 0 };
             Grid.SetColumnSpan(ren, 3);
             Button ok = new Button { Text = "Ok" };
             Grid.SetRow(ok, 1);
@@ -58,7 +58,7 @@ namespace TagTag
             Grid.SetColumn(ig, 1);
             rn = new Grid
             {
-                BackgroundColor = Color.FromRgba(.2, .2, .2, .8),
+                BackgroundColor = Color.Black.MultiplyAlpha(0.5),
                 RowDefinitions =
                 {
                     new RowDefinition {Height = new GridLength(1, GridUnitType.Star) },

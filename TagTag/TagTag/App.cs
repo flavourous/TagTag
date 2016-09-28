@@ -8,6 +8,31 @@ using Xamarin.Forms;
 
 namespace TagTag
 {
+    public static class EXTS
+    {
+        public static StackLayout StackBorder(this View view, StackOrientation o, double t, Color c)
+        {
+            var bv = new BoxView { BackgroundColor = c };
+            if (o == StackOrientation.Horizontal)
+            {
+                view.HorizontalOptions = LayoutOptions.FillAndExpand;
+                bv.WidthRequest = t;
+            }
+            else
+            {
+                view.VerticalOptions = LayoutOptions.FillAndExpand;
+                bv.HeightRequest = t;
+            }
+
+            return new StackLayout
+            {
+                Spacing = 0,
+                Orientation = o,
+                Children = { view, bv }
+            };
+        }
+    }
+
     class Tnc : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -50,7 +75,7 @@ namespace TagTag
             MainPage.Navigation.PushAsync(taggerPage);
         }
 
-        void CEditTag(ITag tag)
+        void CEditTag(ITag tag, NRNameview rv)
         {
             if (tag == null)
                 tag = eman.CreateEntity<ITag>(menu.MenuID);
@@ -60,6 +85,8 @@ namespace TagTag
                 tag.name = s;
                 eman.UpdateEntity(tag);
             });
+
+            mdp.IsPresented = true;
         }
 
         readonly ListView detail;
@@ -70,31 +97,39 @@ namespace TagTag
         class CEA  : EventArgs
         {
             public EventArgs inner;
-            public Cell c;
+            public NRNameview rv;
         }
-        Func<Cell, MenuItem> Generate(String name, EventHandler hand)
+        Func<Cell, MenuItem> Generate(String name, EventHandler hand, NRNameview rv)
         {
             return c =>
             {
                 var mi = new MenuItem { Text = name };
-                mi.Clicked += (o, e) => hand(o, new CEA { inner = e, c = c });
+                mi.Clicked += (o, e) => hand(o, new CEA { inner = e, rv=rv });
                 return mi;
             };
         }
 
+        
+
+
+        readonly MasterDetailPage mdp;
         readonly IPlatform platform;
         NRNameview rv = new NRNameview();
         public App(IPlatform platform)
         {
+
             this.platform = platform;
 
-            var tag = Generate("Tag", Tag_Clicked);
-            var edit = Generate("Edit", Edit_Clicked);
-            var delete = Generate("Delete", Delete_Clicked);
+            var tag = Generate("Tag", Tag_Clicked,rv);
+            var edit = Generate("Edit", Edit_Clicked,rv);
+            var tedit = Generate("Edit", Edit_Clicked, taggerPage.rv);
+            var delete = Generate("Delete", Delete_Clicked,rv);
 
             menu.mi = new [] { tag, edit, delete };
-	        taggerPage.menu.mi = new [] { edit };
-            taggerPage.addTag += TaggerPage_addTag;
+	        taggerPage.menu.mi = new [] { tedit };
+            var ttn = new ToolbarItem { Text = "New" };
+            ttn.Clicked += (o, e) => CEditTag(GetEnt(o) as ITag, taggerPage.rv);
+            taggerPage.ToolbarItems.Add(ttn);
 
             detail = new ListView
             {
@@ -111,38 +146,34 @@ namespace TagTag
                 })
             };
             ToolbarItem create = new ToolbarItem { Text = "New" };
-            create.Clicked += Create_Clicked;
+            create.Clicked += (o, e) => Create_Clicked(o, new CEA { inner = e, rv = rv });
 
-            var mdp = new MasterDetailPage
+            mdp = new MasterDetailPage
             {
+                Title = "TagTag",
                 ToolbarItems = { create },
                 MasterBehavior = MasterBehavior.Split,
                 Master = new ContentPage
                 {
                     Title = "TagTag",
-                    Content = new Grid {
-                        Children = {
-                            menu, rv
-                        }
+                    Content = new Grid
+                    {
+                        Children = { menu, rv, },
+                        BackgroundColor = Color.Silver.WithLuminosity(0.1)
                     }
                 },
                 Detail = new ContentPage
                 {
+                    Title = "TagTag",
                     Content = detail
                 }
             };
+            menu.topBox.BackgroundColor = Color.Silver.WithLuminosity(0.2);
             MainPage = new NavigationPage(mdp);
         }
 
         
-
-        private void TaggerPage_addTag(string obj)
-        {
-            var tag = eman.CreateEntity<ITag>(taggerPage.menu.MenuID);
-            tag.name = obj;
-            eman.UpdateEntity(tag);
-        }
-
+        
         IEntity GetEnt(Object sender)
         {
             var bo = (sender as BindableObject).BindingContext;
@@ -159,7 +190,10 @@ namespace TagTag
         private async void Create_Clicked(object sender, EventArgs e)
         {
             var result = await MainPage.DisplayActionSheet("New", "Cancel", null, "Note", "Tag");
-            if (result == "Tag") CEditTag(null);
+            if (result == "Tag")
+            {
+                CEditTag(null, (e as CEA).rv);
+            }
             else if (result == "Note") CEditNote(null);
         }
 
@@ -172,7 +206,7 @@ namespace TagTag
         {
             var ent = GetEnt(sender);
             if (ent is INote) CEditNote(ent as INote);
-            else if (ent is ITag) CEditTag(ent as ITag);
+            else if (ent is ITag) CEditTag(ent as ITag, (e as CEA).rv);
         }
 
         void CEditNote(INote n)
@@ -192,6 +226,7 @@ namespace TagTag
         {
             /* Handle when your app starts*/
             Presenter.Start(this, platform);
+            mdp.IsPresented = true;
         }
         protected override void OnSleep() {/* Handle when your app sleeps*/}
         protected override void OnResume() {/* Handle when your app resumes*/}

@@ -220,6 +220,7 @@ namespace TagTag.Backend
         {
             this.pk = k;
             this.deet = Systems.s_deets.Get(k);
+            deet.created = DateTime.Now;
         }
 
         public virtual void Update() { Systems.s_deets.Update(deet); }
@@ -282,8 +283,11 @@ namespace TagTag.Backend
 
         public ModelSQLite(IPlatform platform)
         {
+            
             var db = Path.Combine(platform.AppData, "data.db");
+#if DEBUG
             platform.DeleteFile(db);
+#endif
             var conn = new SQLiteConnection(platform.sqlite, db, true);
             Systems.Initalize(conn);
         }
