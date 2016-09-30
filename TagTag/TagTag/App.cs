@@ -168,12 +168,9 @@ namespace TagTag
                     Content = detail
                 }
             };
-            menu.topBox.BackgroundColor = Color.Silver.WithLuminosity(0.2);
             MainPage = new NavigationPage(mdp);
         }
 
-        
-        
         IEntity GetEnt(Object sender)
         {
             var bo = (sender as BindableObject).BindingContext;

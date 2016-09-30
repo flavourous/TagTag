@@ -18,18 +18,25 @@ namespace TagTag.Droid
     {
         protected override void OnCreate(Bundle bundle)
         {
+            
             base.OnCreate(bundle);
             global::Xamarin.Forms.Forms.Init(this, bundle);
-            LoadApplication(new App(new tplat()));
+            LoadApplication(new App(new tplat(this)));
         }
     }
     class tplat : IPlatform
     {
+        readonly Android.Content.Context c;
+        public tplat(Android.Content.Context c)
+        {
+            this.c = c;
+        }
+
         public string AppData
         {
             get
             {
-                return Android.OS.Environment.ExternalStorageDirectory.AbsolutePath;
+                return c.FilesDir.AbsolutePath;
             }
         }
 

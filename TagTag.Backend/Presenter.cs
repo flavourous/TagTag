@@ -58,7 +58,6 @@ namespace TagTag.Backend
         EManProxy model_proxy;
         void Present()
         {
-            
             // main menu presenter
             main_menu = new MenuPresenter(view.menu, model, menuStrategy);
             main_menu.selected += Main_menu_selected;

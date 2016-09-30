@@ -14,8 +14,8 @@ namespace TagTag
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if(targetType == typeof(String))
-                return value is ITag ? "[T]" : "[N]";
-            return value is ITag ? Color.Default : Color.White;
+                return value is ITag ? "#" : "†";
+            return value is ITag ? Color.Accent : Color.White;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -26,13 +26,14 @@ namespace TagTag
     public class MenuView : ContentView, ITagMenu
     {
         cc colc = new cc();
-        public BoxView topBox = new BoxView();
-        Label tree = new Label { Text = "→", VerticalOptions = LayoutOptions.Center };
+        BoxView topBox = new BoxView { BackgroundColor = Color.Silver.WithLuminosity(0.2) };
+        Label tree = new Label { Text = "", VerticalOptions = LayoutOptions.Center, LineBreakMode = LineBreakMode.MiddleTruncation };
+        Button back;
         ListView menu;
         public IEnumerable<Func<Cell, MenuItem>> mi;
         public MenuView()
         {
-            Button back = new Button { Text = "←", Command = new Command(() => MenuBack()) };
+            back = new Button { Text = "←", Command = new Command(() => MenuBack()), WidthRequest = 40, HeightRequest = 20 };
             menu = new ListView
             {
                 HasUnevenRows = true,
@@ -52,10 +53,13 @@ namespace TagTag
                             VerticalTextAlignment = TextAlignment.Center,
                             HorizontalTextAlignment = TextAlignment.End,
                             FontAttributes = FontAttributes.Bold,
+                            WidthRequest = 10
                         };
                         var title = new Label { VerticalTextAlignment = TextAlignment.Center };
                         title.SetBinding(Label.TextProperty, "entity.name");
                         imagesub.SetBinding(Label.TextProperty, "entity", BindingMode.Default, colc);
+                        title.SetBinding(Label.TextColorProperty, "entity", BindingMode.Default, colc);
+                        imagesub.SetBinding(Label.TextColorProperty, "entity", BindingMode.Default, colc);
                         c = new ViewCell
                         {
                             View = new StackLayout
@@ -110,7 +114,8 @@ namespace TagTag
         public void SetMenuItems(IEnumerable<IMenuItem> items) { menu.ItemsSource = items; }
         public void SetTree(IEnumerable<string> tree)
         {
-            this.tree.Text = "→" + String.Join("→", tree);
+            this.tree.Text = String.Join(" → ", tree);
+            this.back.IsEnabled = tree.Count() > 0;
         }
     }
 }

@@ -10,22 +10,27 @@ namespace TagTag
 {
     public class NoteEditor : ContentPage
     {
+        public INote editing { get; set; }
         public void SetNote(INote note, Action commit)
         {
-            BindingContext = note;
+            editing = note;
             this.commit = commit;
+            OnPropertyChanged("editing");
         }
         Action commit;
         public NoteEditor()
         {
+            Title = "TagTag: Note";
+            BindingContext = this;
             var ename = new Entry { VerticalOptions = LayoutOptions.Start, Placeholder = "Name" };
-            ename.SetBinding(Entry.TextProperty, "name", BindingMode.TwoWay);
+            ename.SetBinding(Entry.TextProperty, "editing.name", BindingMode.TwoWay);
+            
 
             var etext = new Editor
             {
                 VerticalOptions = LayoutOptions.FillAndExpand,
             };
-            etext.SetBinding(Editor.TextProperty, "text", BindingMode.TwoWay);
+            etext.SetBinding(Editor.TextProperty, "editing.text", BindingMode.TwoWay);
 
             ToolbarItems.Add(new ToolbarItem() { Text = "Save", Command = new Command(() => commit()) });
 
