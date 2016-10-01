@@ -33,7 +33,7 @@ namespace TagTag
         public IEnumerable<Func<Cell, MenuItem>> mi;
         public MenuView()
         {
-            back = new Button { Text = "←", Command = new Command(() => MenuBack()), WidthRequest = 40, HeightRequest = 20 };
+            back = new Button { Text = "←", Command = new Command(() => MenuBack()), WidthRequest = 40, HeightRequest = 40 };
             menu = new ListView
             {
                 HasUnevenRows = true,
@@ -103,6 +103,7 @@ namespace TagTag
         private void C_Tapped(object sender, EventArgs e)
         {
             var ent = (sender as BindableObject).BindingContext as IMenuItem;
+            this.back.IsEnabled = true;
             ent.Activate();
         }
 

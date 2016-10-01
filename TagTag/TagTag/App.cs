@@ -10,6 +10,14 @@ namespace TagTag
 {
     public static class EXTS
     {
+        public static String ToElipsis(this String s, int len)
+        {
+            String u =s;
+            var l1 = s.IndexOf(Environment.NewLine);
+            if (l1 > -1) u = s.Substring(0, l1);
+            if (u.Length <= len) return u;
+            return u.Substring(0, len) + "…";
+        }
         public static StackLayout StackBorder(this View view, StackOrientation o, double t, Color c)
         {
             var bv = new BoxView { BackgroundColor = c };
@@ -62,7 +70,7 @@ namespace TagTag
             {
                 get
                 {
-                    return e is INote ? (e as INote).text : "";
+                    return e is INote ? (e as INote).text.ToElipsis(256) : "";
                 }
             }
         }
@@ -136,15 +144,35 @@ namespace TagTag
                 HasUnevenRows = true,
                 ItemTemplate = new DataTemplate(() =>
                 {
-                    var c = new TextCell();
-                    c.SetBinding(TextCell.TextProperty, "namedate");
-                    c.SetBinding(TextCell.DetailProperty, "deets");
-                    c.ContextActions.Add(tag(c));
-                    c.ContextActions.Add(edit(c));
-                    c.ContextActions.Add(delete(c));
-                    return c;
+                    Label title = new Label { FontAttributes = FontAttributes.Bold, HorizontalOptions = LayoutOptions.FillAndExpand, LineBreakMode = LineBreakMode.TailTruncation };
+                    Label date = new Label { FontAttributes = FontAttributes.Italic,HorizontalOptions = LayoutOptions.End };
+                    Label deets = new Label { FontSize = title.FontSize - 2.0 };
+                    title.SetBinding(Label.TextProperty, "name");
+                    date.SetBinding(Label.TextProperty, "date");
+                    deets.SetBinding(Label.TextProperty, "deets");
+                    return new ViewCell
+                    {
+                        View = new StackLayout
+                        {
+                            Orientation = StackOrientation.Vertical,
+                            Children =
+                            { 
+                                new StackLayout
+                                {
+                                    Orientation = StackOrientation.Horizontal,
+                                    Spacing =0.0,
+                                    Children = {title, date}
+                                },
+                                deets
+                            },
+                            Spacing = 2.5,
+                            Padding = new Thickness(5.0),
+                        },
+                        ContextActions = { tag(null), edit(null), delete(null) }
+                    };
                 })
             };
+            detail.ItemTapped += Detail_ItemTapped;
             ToolbarItem create = new ToolbarItem { Text = "New" };
             create.Clicked += (o, e) => Create_Clicked(o, new CEA { inner = e, rv = rv });
 
@@ -171,8 +199,15 @@ namespace TagTag
             MainPage = new NavigationPage(mdp);
         }
 
+        private void Detail_ItemTapped(object sender, ItemTappedEventArgs e)
+        {
+            Edit_Clicked(e.Item, new CEA { inner = e, rv = this.rv });
+            detail.SelectedItem = null;
+        }
+
         IEntity GetEnt(Object sender)
         {
+            if (sender is DH) return (sender as DH).e;
             var bo = (sender as BindableObject).BindingContext;
             if (bo is IMenuItem) bo = (bo as IMenuItem).entity;
             if (bo is DH) bo = (bo as DH).e;

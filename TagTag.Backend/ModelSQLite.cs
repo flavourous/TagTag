@@ -14,13 +14,18 @@ namespace TagTag.Backend
 {
     static class Ext
     {
-        public static T EGet<T>(this SQLiteConnection c, Guid k) where T : BaseDB, new()
+        public static T EGet<T>(this SQLiteConnection c, Guid k, Action<T> init) where T : BaseEntity, new()
         {
             var dt = c.Table<T>().Where(d => d.pk == k);
             if (dt.Count() == 1) return dt.First();
-            else return new T { committed = false, pk = k };
+            else
+            {
+                var new_T = new T { committed = false, pk = k };
+                init(new_T);
+                return new_T;
+            }
         }
-        public static IEnumerable<Guid> EIds<T>(this SQLiteConnection c) where T : BaseDB
+        public static IEnumerable<Guid> EIds<T>(this SQLiteConnection c) where T : BaseEntity
         {
             return from e in c.Table<T>() select e.pk;
         }
@@ -31,6 +36,9 @@ namespace TagTag.Backend
         [PrimaryKey, AutoIncrement]
         public int rowid { get; set; }
 
+    }
+    class BaseEntity : BaseDB
+    {
         [Indexed]
         public Guid pk { get; set; }
 
@@ -38,24 +46,24 @@ namespace TagTag.Backend
 
         public override bool Equals(object obj)
         {
-            return obj is BaseDB && (obj as BaseDB).pk == pk;
+            return obj is BaseEntity && (obj as BaseEntity).pk == pk;
         }
         public override int GetHashCode()
         {
             return pk.GetHashCode();
         }
-        public static bool operator ==(BaseDB db1, BaseDB db2)
+        public static bool operator ==(BaseEntity db1, BaseEntity db2)
         {
             return db1.pk == db2.pk;
         }
-        public static bool operator !=(BaseDB db1, BaseDB db2)
+        public static bool operator !=(BaseEntity db1, BaseEntity db2)
         {
             return db1.pk != db2.pk;
         }
     }
 
     [Table("Descriptors")]
-    class Description : BaseDB
+    class Description : BaseEntity
     {
         public DateTime created { get; set; }
         public string name { get; set; }
@@ -69,7 +77,11 @@ namespace TagTag.Backend
             this.conn = conn;
             conn.CreateTable<Description>(CreateFlags.None);
         }
-        public Description Get(Guid k) { return conn.EGet<Description>(k); }
+        void InitDeet(Description d)
+        {
+            d.created = DateTime.Now;
+        }
+        public Description Get(Guid k) { return conn.EGet<Description>(k, InitDeet); }
         public IEnumerable<Guid> Get() { return conn.EIds<Description>(); }
         public void Delete(Description d)
         {
@@ -84,7 +96,7 @@ namespace TagTag.Backend
     }
 
     [Table("Notes")]
-    class Note : BaseDB
+    class Note : BaseEntity
     {
         public string text { get; set; }
     }
@@ -98,7 +110,7 @@ namespace TagTag.Backend
             conn.CreateTable<Note>(CreateFlags.None);
         }
         public IEnumerable<Guid> Get() { return conn.EIds<Note>(); }
-        public Note Get(Guid k) { return conn.EGet<Note>(k); }
+        public Note Get(Guid k) { return conn.EGet<Note>(k, delegate { }); }
         public void Delete(Note n)
         {
             if (n.committed) conn.Delete(n);
@@ -112,8 +124,9 @@ namespace TagTag.Backend
     }
 
     [Table("Tags")]
-    class Tag : BaseDB
+    class Tag : BaseEntity
     {
+        public Guid tag { get; set; }
         public List<Guid> pending_add = new List<Guid>();
         public List<Guid> pending_remove = new List<Guid>();
     }
@@ -136,20 +149,29 @@ namespace TagTag.Backend
             conn.CreateTable<Tag>(CreateFlags.None);
             conn.CreateTable<TagTag>(CreateFlags.None);
         }
-
+        void InitTag(Tag t)
+        {
+            t.tag = Guid.NewGuid();
+        }
         public IEnumerable<Guid> Get() { return conn.EIds<Tag>(); }
-        public Tag Get(Guid k) { return conn.EGet<Tag>(k); }
+        public Tag Get(Guid k) { return conn.EGet<Tag>(k, InitTag); }
         public IEnumerable<Guid> Tags(Guid entity)
         {
-            return from t in conn.Table<TagTag>()
+            // like this because we might make two tags into one entity - the .tag on Tag 
+            // means we can actually tell the diff between them on the TagTag table!
+            // FIXME some kinda join?
+            var tg = from t in conn.Table<TagTag>()
                    where t.entity == entity
                    select t.tag;
+            return from t in conn.Table<Tag>()
+                   where tg.Contains(t.tag)
+                   select t.pk;
         }
-        public IEnumerable<Guid> Entities(Guid tag)
+        public IEnumerable<Guid> Entities(Tag tag)
         {
-            return from t in conn.Table<TagTag>()
-                   where t.tag == tag
-                   select t.entity;
+            return from tt in conn.Table<TagTag>()
+                   where tt.tag == tag.tag
+                   select tt.entity;
         }
         public void Tag(Tag tag, Guid entity)
         {
@@ -164,7 +186,7 @@ namespace TagTag.Backend
         public void Delete(Tag t)
         {
             if (!t.committed) return;
-            conn.Table<TagTag>().Delete(tt => tt.tag == t.pk);
+            conn.Table<TagTag>().Delete(tt => tt.tag == t.tag);
             conn.Delete(t);
         }
         public void Update(Tag t)
@@ -172,9 +194,9 @@ namespace TagTag.Backend
             if (!t.committed) conn.Insert(t);
             else conn.Update(t);
             t.committed = true;
-            conn.Table<TagTag>().Delete(d => t.pending_remove.Contains(d.tag));
+            conn.Table<TagTag>().Delete(d => d.tag == t.tag && t.pending_remove.Contains(d.entity));
             conn.InsertAll(from c in t.pending_add
-                           select new TagTag { tag = t.pk, entity = c });
+                           select new TagTag { tag = t.tag, entity = c });
             t.pending_add.Clear();
             t.pending_remove.Clear();
         }
@@ -220,7 +242,6 @@ namespace TagTag.Backend
         {
             this.pk = k;
             this.deet = Systems.s_deets.Get(k);
-            deet.created = DateTime.Now;
         }
 
         public virtual void Update() { Systems.s_deets.Update(deet); }
