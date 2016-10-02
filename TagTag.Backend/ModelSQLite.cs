@@ -307,7 +307,7 @@ namespace TagTag.Backend
             
             var db = Path.Combine(platform.AppData, "data.db");
 #if DEBUG
-            platform.DeleteFile(db);
+            //platform.DeleteFile(db);
 #endif
             var conn = new SQLiteConnection(platform.sqlite, db, true);
             Systems.Initalize(conn);

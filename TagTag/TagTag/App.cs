@@ -65,7 +65,8 @@ namespace TagTag
         {
             public DH(IEntity e){this.e = e;}
             public readonly IEntity e;
-            public String namedate { get { return e.name + " - " + e.created.ToString("dd/MM/yyyy"); } }
+            public String name { get { return e.name; } }
+            public String date { get {  return e.created.ToString("dd/MM/yyyy"); } }
             public String deets
             {
                 get
@@ -83,10 +84,10 @@ namespace TagTag
             MainPage.Navigation.PushAsync(taggerPage);
         }
 
-        void CEditTag(ITag tag, NRNameview rv)
+        void CEditTag(ITag tag, NRNameview rv, object id)
         {
             if (tag == null)
-                tag = eman.CreateEntity<ITag>(menu.MenuID);
+                tag = eman.CreateEntity<ITag>(id);
 
             rv.Edit(tag.name, s =>
             {
@@ -106,13 +107,14 @@ namespace TagTag
         {
             public EventArgs inner;
             public NRNameview rv;
+            public Object mid;
         }
-        Func<Cell, MenuItem> Generate(String name, EventHandler hand, NRNameview rv)
+        Func<Cell, MenuItem> Generate(String name, EventHandler hand, NRNameview rv, Object mid)
         {
             return c =>
             {
                 var mi = new MenuItem { Text = name };
-                mi.Clicked += (o, e) => hand(o, new CEA { inner = e, rv=rv });
+                mi.Clicked += (o, e) => hand(o, new CEA { inner = e, rv=rv, mid=mid });
                 return mi;
             };
         }
@@ -128,15 +130,15 @@ namespace TagTag
 
             this.platform = platform;
 
-            var tag = Generate("Tag", Tag_Clicked,rv);
-            var edit = Generate("Edit", Edit_Clicked,rv);
-            var tedit = Generate("Edit", Edit_Clicked, taggerPage.rv);
-            var delete = Generate("Delete", Delete_Clicked,rv);
+            var tag = Generate("Tag", Tag_Clicked,rv, menu.MenuID);
+            var edit = Generate("Edit", Edit_Clicked,rv, menu.MenuID);
+            var tedit = Generate("Edit", Edit_Clicked, taggerPage.rv, taggerPage.menu.MenuID);
+            var delete = Generate("Delete", Delete_Clicked,rv, menu.MenuID);
 
             menu.mi = new [] { tag, edit, delete };
 	        taggerPage.menu.mi = new [] { tedit };
             var ttn = new ToolbarItem { Text = "New" };
-            ttn.Clicked += (o, e) => CEditTag(GetEnt(o) as ITag, taggerPage.rv);
+            ttn.Clicked += (o, e) => CEditTag(GetEnt(o) as ITag, taggerPage.rv, taggerPage.menu.MenuID);
             taggerPage.ToolbarItems.Add(ttn);
 
             detail = new ListView
@@ -144,8 +146,22 @@ namespace TagTag
                 HasUnevenRows = true,
                 ItemTemplate = new DataTemplate(() =>
                 {
-                    Label title = new Label { FontAttributes = FontAttributes.Bold, HorizontalOptions = LayoutOptions.FillAndExpand, LineBreakMode = LineBreakMode.TailTruncation };
-                    Label date = new Label { FontAttributes = FontAttributes.Italic,HorizontalOptions = LayoutOptions.End };
+                    Label title = new Label
+                    {
+                        FontAttributes = FontAttributes.Bold,
+                        HorizontalOptions = LayoutOptions.Fill,
+                        LineBreakMode = LineBreakMode.TailTruncation
+                    };
+                    Label date = new Label
+                    {
+                        FontAttributes = FontAttributes.Italic,
+                        HorizontalOptions = LayoutOptions.EndAndExpand,
+                        HorizontalTextAlignment = TextAlignment.End,
+                        MinimumWidthRequest = 150,
+                        BackgroundColor = Color.Purple,
+                        VerticalOptions = LayoutOptions.Center,
+                        FontSize = title.FontSize - 2.0
+                    };
                     Label deets = new Label { FontSize = title.FontSize - 2.0 };
                     title.SetBinding(Label.TextProperty, "name");
                     date.SetBinding(Label.TextProperty, "date");
@@ -224,7 +240,7 @@ namespace TagTag
             var result = await MainPage.DisplayActionSheet("New", "Cancel", null, "Note", "Tag");
             if (result == "Tag")
             {
-                CEditTag(null, (e as CEA).rv);
+                CEditTag(null, (e as CEA).rv, (e as CEA).mid);
             }
             else if (result == "Note") CEditNote(null);
         }
@@ -238,7 +254,7 @@ namespace TagTag
         {
             var ent = GetEnt(sender);
             if (ent is INote) CEditNote(ent as INote);
-            else if (ent is ITag) CEditTag(ent as ITag, (e as CEA).rv);
+            else if (ent is ITag) CEditTag(ent as ITag, (e as CEA).rv, (e as CEA).mid);
         }
 
         void CEditNote(INote n)

@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace TagTag.Backend
 {
+    delegate void emcd(ITag removed = null);
     class EManProxy : IEntityManager
     {
-        public event Action changed = delegate { };
+        public event emcd changed = delegate { };
         readonly IModel model;
         public EManProxy(IModel model)
         {
@@ -28,7 +29,7 @@ namespace TagTag.Backend
         public void DeleteEntity(IEntity e)
         {
             model.eman.DeleteEntity(e);
-            changed();
+            changed(e as ITag);
         }
         Dictionary<IEntity, ITag> rootTagsToUpdate = new Dictionary<IEntity, ITag>();
         public IEntity UpdateEntity(IEntity e)

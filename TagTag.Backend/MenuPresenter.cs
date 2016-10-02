@@ -72,8 +72,10 @@ namespace TagTag.Backend
             else esel = true;
             selected(en);
         }
-        public void Refresh()
+        public void Refresh(ITag deleted = null)
         {
+            // This pops down to a valid tagtree (there can be many or no paths paths to a severd tree - lets not try to arbitrairaly pick one)
+            if (deleted != null) while (root.Contains(deleted)) root.PopNull();
             SelectEntity(head);
         }
 
