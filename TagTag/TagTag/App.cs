@@ -154,11 +154,9 @@ namespace TagTag
                     };
                     Label date = new Label
                     {
-                        FontAttributes = FontAttributes.Italic,
                         HorizontalOptions = LayoutOptions.EndAndExpand,
                         HorizontalTextAlignment = TextAlignment.End,
                         MinimumWidthRequest = 150,
-                        BackgroundColor = Color.Purple,
                         VerticalOptions = LayoutOptions.Center,
                         FontSize = title.FontSize - 2.0
                     };
@@ -190,7 +188,7 @@ namespace TagTag
             };
             detail.ItemTapped += Detail_ItemTapped;
             ToolbarItem create = new ToolbarItem { Text = "New" };
-            create.Clicked += (o, e) => Create_Clicked(o, new CEA { inner = e, rv = rv });
+            create.Clicked += (o, e) => Create_Clicked(o, new CEA { inner = e, rv = rv, mid = menu.MenuID });
 
             mdp = new MasterDetailPage
             {
@@ -217,7 +215,7 @@ namespace TagTag
 
         private void Detail_ItemTapped(object sender, ItemTappedEventArgs e)
         {
-            Edit_Clicked(e.Item, new CEA { inner = e, rv = this.rv });
+            Edit_Clicked(e.Item, new CEA { inner = e, rv = this.rv, mid = menu.MenuID });
             detail.SelectedItem = null;
         }
 
