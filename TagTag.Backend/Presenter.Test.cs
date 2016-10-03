@@ -157,7 +157,11 @@ namespace TagTag.Backend
             Debug.Assert(n1.tags.Contains(t1));
             // and does it present it back?
             ttm.OnTagging(n1); // starts the tagpresenter!
-            Debug.Assert(ttm.menu.ElementAt(0).ticked);
+            Debug.Assert(ttm.menu.Where(d => d.entity.Equals(t1)).First().ticked);
+            plat.WriteLine("Un-Tagging something");
+            ttm.menu.Where(d => d.entity.Equals(t1)).First().ticked = false;
+            ttm.OnTagging(n1); // starts the tagpresenter!
+            Debug.Assert(!ttm.menu.Where(d => d.entity.Equals(t1)).First().ticked);
             // check tag menu is organized correctly
             view.tm.menu.Where(m => m.entity.name == "tag 1").First().Activate(); // t1
             Debug.Assert(view.tm.menu.Count() == 1);
@@ -169,7 +173,7 @@ namespace TagTag.Backend
             plat.WriteLine("Ok");
 
             plat.WriteLine("Deleting everything and checking a solitary tag entity appears on menu");
-            view.mm.GoMenuBack(); // root plz! we gettin hacked by the tag->tag wormhole feature.
+            view.mm.GoMenuBack(); // root plz! 
             // Now we delete everything!
             while (view.mm.menu.Count() > 0)
             {

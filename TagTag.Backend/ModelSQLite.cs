@@ -265,7 +265,7 @@ namespace TagTag.Backend
             tag = Systems.s_tags.Get(k);
         }
         public void Tag(EntityVM entity) { Systems.s_tags.Tag(tag, entity.pk); }
-        public void UnTag(EntityVM entity) { Systems.s_tags.Tag(tag, entity.pk); }
+        public void UnTag(EntityVM entity) { Systems.s_tags.UnTag(tag, entity.pk); }
         public override void Delete()
         {
             base.Delete();
