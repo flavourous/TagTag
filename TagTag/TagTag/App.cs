@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using TagTag.Backend;
 using Xamarin.Forms;
 
@@ -10,6 +11,14 @@ namespace TagTag
 {
     public static class EXTS
     {
+        public static View OnGrid(this View v, int row=0, int col=0, int rowspan=1, int colspan=1)
+        {
+            Grid.SetRow(v,row);
+            Grid.SetColumn(v, col);
+            Grid.SetRowSpan(v, rowspan);
+            Grid.SetColumnSpan(v, colspan);
+            return v;
+        }
         public static String ToElipsis(this String s, int len)
         {
             String u =s;
@@ -140,6 +149,7 @@ namespace TagTag
             var ttn = new ToolbarItem { Text = "New" };
             ttn.Clicked += (o, e) => CEditTag(GetEnt(o) as ITag, taggerPage.rv, taggerPage.menu.MenuID);
             taggerPage.ToolbarItems.Add(ttn);
+           
 
             detail = new ListView
             {
@@ -193,7 +203,7 @@ namespace TagTag
             mdp = new MasterDetailPage
             {
                 Title = "TagTag",
-                ToolbarItems = { create },
+                ToolbarItems = { create, new ToolbarItem { Text = "test", Command = new Command(() => MainPage.Navigation.PushAsync(new NoteEditor())) } },
                 MasterBehavior = MasterBehavior.Split,
                 Master = new ContentPage
                 {
@@ -240,7 +250,7 @@ namespace TagTag
             {
                 CEditTag(null, (e as CEA).rv, (e as CEA).mid);
             }
-            else if (result == "Note") CEditNote(null);
+            else if (result == "Note") await CEditNote(null);
         }
 
         private void Delete_Clicked(object sender, EventArgs e)
@@ -248,14 +258,14 @@ namespace TagTag
             eman.DeleteEntity(GetEnt(sender));
         }
 
-        private void Edit_Clicked(object sender, EventArgs e)
+        private async void Edit_Clicked(object sender, EventArgs e)
         {
             var ent = GetEnt(sender);
-            if (ent is INote) CEditNote(ent as INote);
+            if (ent is INote) await CEditNote(ent as INote);
             else if (ent is ITag) CEditTag(ent as ITag, (e as CEA).rv, (e as CEA).mid);
         }
 
-        void CEditNote(INote n)
+        async Task CEditNote(INote n)
         {
             if (n == null)
                 n = eman.CreateEntity<INote>(menu.MenuID);
@@ -265,7 +275,8 @@ namespace TagTag
                 eman.UpdateEntity(n);
                 MainPage.Navigation.PopAsync();
             });
-            MainPage.Navigation.PushAsync(ned);
+
+            await MainPage.Navigation.PushAsync(ned);
         }
 
         protected override void OnStart()
