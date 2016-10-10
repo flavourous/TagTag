@@ -1,5 +1,4 @@
 ﻿using System;
-
 using Android.App;
 using Android.Content.PM;
 using Android.Runtime;
@@ -10,18 +9,26 @@ using TagTag.Backend;
 using SQLite.Net.Platform.XamarinAndroid;
 using SQLite.Net.Interop;
 using System.IO;
+using HockeyApp.Android;
 
 namespace TagTag.Droid
 {
-    [Activity(Label = "TagTag", Icon = "@drawable/icon", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
+    [Activity( Label = "TagTag", Icon = "@drawable/icon", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation, WindowSoftInputMode = SoftInput.AdjustResize)]
     public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsApplicationActivity
     {
         protected override void OnCreate(Bundle bundle)
         {
-            
             base.OnCreate(bundle);
             global::Xamarin.Forms.Forms.Init(this, bundle);
             LoadApplication(new App(new tplat(this)));
+            CrashManager.Register(this, "940f01fcceac407b9ece6642ced711c0", new OurCrashListner());
+        }
+        class OurCrashListner : CrashManagerListener
+        {
+            public override bool IgnoreDefaultHandler()
+            {
+                return false;
+            }
         }
     }
     class tplat : IPlatform

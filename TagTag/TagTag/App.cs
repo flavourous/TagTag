@@ -22,6 +22,7 @@ namespace TagTag
         public static String ToElipsis(this String s, int len)
         {
             String u =s;
+            if (u == null) return null;
             var l1 = s.IndexOf(Environment.NewLine);
             if (l1 > -1) u = s.Substring(0, l1);
             if (u.Length <= len) return u;
@@ -200,10 +201,13 @@ namespace TagTag
             ToolbarItem create = new ToolbarItem { Text = "New" };
             create.Clicked += (o, e) => Create_Clicked(o, new CEA { inner = e, rv = rv, mid = menu.MenuID });
 
+            ToolbarItem test = new ToolbarItem { Text = "Crash" };
+            test.Clicked += (o, w) => { throw new NotImplementedException(); };
+
             mdp = new MasterDetailPage
             {
                 Title = "TagTag",
-                ToolbarItems = { create, new ToolbarItem { Text = "test", Command = new Command(() => MainPage.Navigation.PushAsync(new NoteEditor())) } },
+                ToolbarItems = { create },
                 MasterBehavior = MasterBehavior.Split,
                 Master = new ContentPage
                 {

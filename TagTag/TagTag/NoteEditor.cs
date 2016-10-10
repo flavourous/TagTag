@@ -20,21 +20,20 @@ namespace TagTag
         Action commit;
         public NoteEditor()
         {
-            
-            Title = "TagTag: Note";
+            Title = "TagTag";
             BindingContext = this;
             var ename = new Entry { VerticalOptions = LayoutOptions.Start, Placeholder = "Name" };
             ename.SetBinding(Entry.TextProperty, "editing.name", BindingMode.TwoWay);
 
             // There is a bug in editor - when text becomes large, it denies action mode, because the 
             // pressed layer becomes a textview - says "does not support selection".  Think it should be
-            // edittext...
+            // edittext...editor inside the stacklayout does it.
             var etext = new Editor
             {
                 VerticalOptions = LayoutOptions.Fill,
             };
-            //etext.SetBinding(Editor.TextProperty, "editing.text", BindingMode.TwoWay);
-            etext.Text = "Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text";
+            etext.SetBinding(Editor.TextProperty, "editing.text", BindingMode.TwoWay);
+            //etext.Text = "Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text Long text";
 
             ToolbarItems.Add(new ToolbarItem() { Text = "Save", Command = new Command(() => commit()) });
 

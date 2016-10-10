@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using TagTag.Backend;
@@ -9,13 +10,13 @@ using Xamarin.Forms;
 
 namespace TagTag
 {
-    class cc : IValueConverter
+    class IconConverter : IValueConverter
     {
+        ImageSource t = ImageSource.FromResource("TagTag.Images.tag-icon.png");
+        ImageSource n = ImageSource.FromResource("TagTag.Images.note-icon.png");
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if(targetType == typeof(String))
-                return value is ITag ? "#" : "†";
-            return value is ITag ? Color.Accent : Color.White;
+            return value is ITag ? t : n;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -25,7 +26,7 @@ namespace TagTag
     }
     public class MenuView : ContentView, ITagMenu
     {
-        cc colc = new cc();
+        IconConverter iconConv = new IconConverter();
         BoxView topBox = new BoxView { BackgroundColor = Color.Silver.WithLuminosity(0.2) };
         Label tree = new Label { Text = "", VerticalOptions = LayoutOptions.Center, LineBreakMode = LineBreakMode.MiddleTruncation };
         Button back;
@@ -33,7 +34,8 @@ namespace TagTag
         public IEnumerable<Func<Cell, MenuItem>> mi;
         public MenuView()
         {
-            back = new Button { Text = "←", Command = new Command(() => MenuBack()), WidthRequest = 40, HeightRequest = 40 };
+            
+            back = new Button { Command = new Command(() => MenuBack()), WidthRequest = 40, HeightRequest = 40 };
             menu = new ListView
             {
                 HasUnevenRows = true,
@@ -48,18 +50,10 @@ namespace TagTag
                     }
                     else
                     {
-                        var imagesub = new Label
-                        {
-                            VerticalTextAlignment = TextAlignment.Center,
-                            HorizontalTextAlignment = TextAlignment.End,
-                            FontAttributes = FontAttributes.Bold,
-                            WidthRequest = 10
-                        };
+                        var imagesub = new Image{ };
                         var title = new Label { VerticalTextAlignment = TextAlignment.Center };
+                        imagesub.SetBinding(Image.SourceProperty, "entity", BindingMode.Default, iconConv);
                         title.SetBinding(Label.TextProperty, "entity.name");
-                        imagesub.SetBinding(Label.TextProperty, "entity", BindingMode.Default, colc);
-                        title.SetBinding(Label.TextColorProperty, "entity", BindingMode.Default, colc);
-                        imagesub.SetBinding(Label.TextColorProperty, "entity", BindingMode.Default, colc);
                         c = new ViewCell
                         {
                             View = new StackLayout
@@ -82,6 +76,18 @@ namespace TagTag
             Grid.SetColumnSpan(menu, 2);
             Grid.SetRow(menu, 1);
 
+            var backet = new Grid
+            {
+                WidthRequest = 40,
+                HeightRequest = 40,
+                Children =
+                {
+                    back,
+                    new Image { Source = ImageSource.FromResource("TagTag.Images.back-icon.png"),
+                    VerticalOptions = LayoutOptions.Center, HorizontalOptions = LayoutOptions.Center }
+                }
+            };
+
             Content = new Grid
             {
                 ColumnDefinitions =
@@ -94,7 +100,7 @@ namespace TagTag
                     new RowDefinition{ Height= GridLength.Auto },
                     new RowDefinition{ Height=  new GridLength(1,GridUnitType.Star) }
                 },
-                Children = { topBox, tree, back, menu },
+                Children = { topBox, tree, backet, menu },
                 RowSpacing = 0,
                 ColumnSpacing =0
             };
