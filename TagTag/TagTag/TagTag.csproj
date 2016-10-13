@@ -39,10 +39,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="App.cs" />
+    <Compile Include="EULA.cs" />
     <Compile Include="MenuView.cs" />
     <Compile Include="NoteEditor.cs" />
     <Compile Include="NRNameview.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Settings.cs" />
     <Compile Include="TaggerPage.cs" />
   </ItemGroup>
   <ItemGroup>

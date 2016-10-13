@@ -15,5 +15,6 @@ namespace TagTag.Backend
         String AppData { get; }
         void DeleteFile(String path);
         Stream ReadFile(String path);
+        int AppVersion { get; }
     }
 }

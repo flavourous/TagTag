@@ -112,6 +112,7 @@ namespace TagTag
         readonly MenuView menu = new MenuView();
         readonly TaggerPage taggerPage = new TaggerPage();
         readonly NoteEditor ned = new NoteEditor();
+        readonly Settings set = new Settings();
 
         class CEA  : EventArgs
         {
@@ -133,13 +134,9 @@ namespace TagTag
 
 
         readonly MasterDetailPage mdp;
-        readonly IPlatform platform;
         NRNameview rv = new NRNameview();
-        public App(IPlatform platform)
+        public App()
         {
-
-            this.platform = platform;
-
             var tag = Generate("Tag", Tag_Clicked,rv, menu.MenuID);
             var edit = Generate("Edit", Edit_Clicked,rv, menu.MenuID);
             var tedit = Generate("Edit", Edit_Clicked, taggerPage.rv, taggerPage.menu.MenuID);
@@ -201,13 +198,13 @@ namespace TagTag
             ToolbarItem create = new ToolbarItem { Text = "New" };
             create.Clicked += (o, e) => Create_Clicked(o, new CEA { inner = e, rv = rv, mid = menu.MenuID });
 
-            ToolbarItem test = new ToolbarItem { Text = "Crash" };
-            test.Clicked += (o, w) => { throw new NotImplementedException(); };
+            ToolbarItem settings = new ToolbarItem { Text = "Settings",Order = ToolbarItemOrder.Secondary };
+            settings.Clicked += (o, w) => MainPage.Navigation.PushModalAsync(set);
 
             mdp = new MasterDetailPage
             {
                 Title = "TagTag",
-                ToolbarItems = { create },
+                ToolbarItems = { create, settings },
                 MasterBehavior = MasterBehavior.Split,
                 Master = new ContentPage
                 {
@@ -286,8 +283,9 @@ namespace TagTag
         protected override void OnStart()
         {
             /* Handle when your app starts*/
-            Presenter.Start(this, platform);
+            Presenter.Start(this, DependencyService.Get<IPlatform>());
             mdp.IsPresented = true;
+            EULA.Display(MainPage, true);
         }
         protected override void OnSleep() {/* Handle when your app sleeps*/}
         protected override void OnResume() {/* Handle when your app resumes*/}

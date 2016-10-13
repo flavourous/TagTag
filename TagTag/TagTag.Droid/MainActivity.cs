@@ -16,11 +16,14 @@ namespace TagTag.Droid
     [Activity( Label = "TagTag", Icon = "@drawable/icon", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation, WindowSoftInputMode = SoftInput.AdjustResize)]
     public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsApplicationActivity
     {
+        public static Android.Content.Context context { get; private set; }
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
+            MainActivity.context = this;
+            Xamarin.Forms.DependencyService.Register<IPlatform, tplat>();
             global::Xamarin.Forms.Forms.Init(this, bundle);
-            LoadApplication(new App(new tplat(this)));
+            LoadApplication(new App());
             CrashManager.Register(this, "940f01fcceac407b9ece6642ced711c0", new OurCrashListner());
         }
         class OurCrashListner : CrashManagerListener
@@ -33,17 +36,11 @@ namespace TagTag.Droid
     }
     class tplat : IPlatform
     {
-        readonly Android.Content.Context c;
-        public tplat(Android.Content.Context c)
-        {
-            this.c = c;
-        }
-
         public string AppData
         {
             get
             {
-                return c.FilesDir.AbsolutePath;
+                return MainActivity.context.FilesDir.AbsolutePath;
             }
         }
 
@@ -53,6 +50,14 @@ namespace TagTag.Droid
             get
             {
                 return sq;
+            }
+        }
+
+        public int AppVersion
+        {
+            get
+            {
+                return MainActivity.context.PackageManager.GetPackageInfo(MainActivity.context.PackageName, 0).VersionCode;
             }
         }
 
