@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TagTag.Droid", "TagTag\TagTag.Droid\TagTag.Droid.csproj", "{8E5A9EEB-F6E2-4A87-897A-35C39A35124C}"
 EndProject
@@ -17,9 +17,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TagTag", "TagTag\TagTag\Tag
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TagTag.Backend", "TagTag.Backend\TagTag.Backend.csproj", "{50B1A443-2A50-4E84-BE2C-24220CCEC3EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleRunner", "ConsoleRunner\ConsoleRunner.csproj", "{F0B9B8B0-C8E1-4A7F-A354-CBEFE181513A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleTestRunner", "ConsoleRunner\ConsoleTestRunner.csproj", "{F0B9B8B0-C8E1-4A7F-A354-CBEFE181513A}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "LibXamHelp", "..\LibXamHelp\LibXamHelp.shproj", "{8D05BA4B-B6DD-43A9-B8B3-8ED1A47A1CE2}"
 EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\LibXamHelp\LibXamHelp.projitems*{8775fbc6-5986-40cc-a40b-f994fb06b8e7}*SharedItemsImports = 4
+		..\LibXamHelp\LibXamHelp.projitems*{8d05ba4b-b6dd-43a9-b8b3-8ed1a47a1ce2}*SharedItemsImports = 13
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Ad-Hoc|Any CPU = Ad-Hoc|Any CPU
 		Ad-Hoc|ARM = Ad-Hoc|ARM

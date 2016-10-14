@@ -12,6 +12,7 @@ namespace ConsoleRunner
 {
     class tplat : IPlatform
     {
+        public int AppVersion { get { return 1; } }
         public string AppData
         {
             get

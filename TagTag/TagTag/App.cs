@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LibXamHelp;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -131,12 +132,11 @@ namespace TagTag
         }
 
         
-
-
         readonly MasterDetailPage mdp;
         NRNameview rv = new NRNameview();
         public App()
         {
+            DependencyService.Register<IAppInfo, AppInfo>();
             var tag = Generate("Tag", Tag_Clicked,rv, menu.MenuID);
             var edit = Generate("Edit", Edit_Clicked,rv, menu.MenuID);
             var tedit = Generate("Edit", Edit_Clicked, taggerPage.rv, taggerPage.menu.MenuID);
@@ -190,16 +190,16 @@ namespace TagTag
                             Spacing = 2.5,
                             Padding = new Thickness(5.0),
                         },
-                        ContextActions = { tag(null), edit(null), delete(null) }
+                        ContextActions = { tag(null), edit(null), delete(null) },
                     };
                 })
             };
             detail.ItemTapped += Detail_ItemTapped;
-            ToolbarItem create = new ToolbarItem { Text = "New" };
+            ToolbarItem create = new ToolbarItem { Text = "New",  };
             create.Clicked += (o, e) => Create_Clicked(o, new CEA { inner = e, rv = rv, mid = menu.MenuID });
 
             ToolbarItem settings = new ToolbarItem { Text = "Settings",Order = ToolbarItemOrder.Secondary };
-            settings.Clicked += (o, w) => MainPage.Navigation.PushModalAsync(set);
+            settings.Clicked += (o, e) => SC();
 
             mdp = new MasterDetailPage
             {
@@ -221,7 +221,8 @@ namespace TagTag
                     Content = detail
                 }
             };
-            MainPage = new NavigationPage(mdp);
+            var np = new NavigationPage(mdp);
+            MainPage = np;
         }
 
         private void Detail_ItemTapped(object sender, ItemTappedEventArgs e)
@@ -242,6 +243,11 @@ namespace TagTag
         private void Tag_Clicked(object sender, EventArgs e)
         {
             TagIt(GetEnt(sender));
+        }
+
+        async void SC()
+        {
+            await MainPage.Navigation.PushAsync(set);
         }
 
         private async void Create_Clicked(object sender, EventArgs e)
@@ -289,5 +295,16 @@ namespace TagTag
         }
         protected override void OnSleep() {/* Handle when your app sleeps*/}
         protected override void OnResume() {/* Handle when your app resumes*/}
+    }
+
+    class AppInfo : IAppInfo
+    {
+        readonly IPlatform plat;
+        public AppInfo()
+        {
+            plat = DependencyService.Get<IPlatform>(DependencyFetchTarget.GlobalInstance);
+        }
+        public string AppName { get { return "TagTag"; } }
+        public int AppVersion { get { return plat.AppVersion; } }
     }
 }

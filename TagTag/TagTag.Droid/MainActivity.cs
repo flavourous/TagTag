@@ -34,8 +34,17 @@ namespace TagTag.Droid
             }
         }
     }
+    
     class tplat : IPlatform
     {
+        public int AppVersion
+        {
+            get
+            {
+                return MainActivity.context.PackageManager.GetPackageInfo(MainActivity.context.PackageName, 0).VersionCode;
+            }
+        }
+
         public string AppData
         {
             get
@@ -50,14 +59,6 @@ namespace TagTag.Droid
             get
             {
                 return sq;
-            }
-        }
-
-        public int AppVersion
-        {
-            get
-            {
-                return MainActivity.context.PackageManager.GetPackageInfo(MainActivity.context.PackageName, 0).VersionCode;
             }
         }
 

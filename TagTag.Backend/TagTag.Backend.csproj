@@ -42,8 +42,8 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
     <Compile Include="EntityManagerPresentationProxy.cs" />
     <Compile Include="Helpers.cs" />
+    <Compile Include="IPlatform.cs" />
     <Compile Include="ModelSQLite.cs" />
-    <Compile Include="Platform.cs" />
     <Compile Include="Presenter.Test.cs" />
     <Compile Include="MenuPresenter.cs" />
   </ItemGroup>

@@ -1,5 +1,7 @@
-﻿using System;
+﻿using LibXamHelp;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,21 +15,25 @@ namespace TagTag
         public String Sub { get; set; }
         public Action Act { get; set; }
     }
-    class Settings : ContentPage
+    public class Settings : ContentPage
     {
+        readonly ListView mlv;
         public Settings()
         {
-            Title = "TagTag Settings";
-            Content = new ListView
+            
+            mlv = new ListView
             {
-                ItemTemplate= new DataTemplate(() =>
+                VerticalOptions = LayoutOptions.Fill,
+                HorizontalOptions = LayoutOptions.Fill,
+                ItemTemplate = new DataTemplate(() =>
                 {
                     var tc = new TextCell();
                     tc.SetBinding(TextCell.TextProperty, new Binding("Name"));
                     tc.SetBinding(TextCell.DetailProperty, new Binding("Sub"));
                     return tc;
                 }),
-                ItemsSource = new List<SI> {
+                ItemsSource = new List<SI>
+                {
                     new SI
                     {
                         Name = "EULA",
@@ -36,12 +42,15 @@ namespace TagTag
                     }
                 }
             };
-            (Content as ListView).ItemTapped += Settings_ItemTapped;
+            Title = "Settings";
+            Content = mlv;
+            mlv.ItemTapped += Settings_ItemTapped;
         }
 
         private void Settings_ItemTapped(object sender, ItemTappedEventArgs e)
         {
             (e.Item as SI).Act();
+            mlv.SelectedItem = null;
         }
     }
 }
