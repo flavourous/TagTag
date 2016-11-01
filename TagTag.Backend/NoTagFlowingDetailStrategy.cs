@@ -10,12 +10,12 @@ namespace TagTag.Backend
     {
         public IEnumerable<IEntity> GetEntities(IEntity selected, IEnumerable<IEntity> all)
         {
+            IEnumerable<IEntity> ret = new IEntity[] { selected };
             if (selected is ITag)
-                return from e in all where e.tags.Contains(selected as ITag) && !(e is ITag) select e;
+                ret = from e in all where e.tags.Contains(selected as ITag) && !(e is ITag) select e;
             else if (selected == null)
-                return from e in all where e.tags.Count() == 0 && !(e is ITag) select e;
-            else
-                return new IEntity[] { selected };
+                ret =  from e in all where e.tags.Count() == 0 && !(e is ITag) select e;
+            return ret.OrderByDescending(e => e.created);
         }
     }
 }

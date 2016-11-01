@@ -38,7 +38,7 @@ namespace TagTag.Backend
         {
             var ret = from m in models
                    where ((root == null && m.tags.Count() == 0) || m.tags.Contains(root)) && (!tagsonly || m is ITag)
-                   orderby m is ITag descending
+                   orderby m is ITag descending, m.name ascending
                    select new HMi(m, hooks);
             return ret;
         }
