@@ -1,0 +1,12 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="TagTag.Android/TagTag.Android.csproj" />
+  <Project Path="TagTag.Backend/TagTag.Backend.csproj" />
+  <Project Path="TagTag.Desktop/TagTag.Desktop.csproj" />
+  <Project Path="TagTag.Test/TagTag.Test.csproj" />
+  <Project Path="TagTag/TagTag.csproj" />
+</Solution>

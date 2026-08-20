@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="ReactiveUI" />
+    <PackageReference Include="ReactiveUI.Avalonia" />
+    <PackageReference Include="ReactiveUI.SourceGenerators" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TagTag.Backend\TagTag.Backend.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="TagTag\**\*.cs;TagTag.Droid\**\*.cs;TagTag.iOS\**\*.cs;TagTag.UWP\**\*.cs;TagTag.Windows\**\*.cs;TagTag.WinPhone\**\*.cs" />
+    <AvaloniaXaml Remove="TagTag\**\*.xaml;TagTag.UWP\**\*.xaml;TagTag.Windows\**\*.xaml;TagTag.WinPhone\**\*.xaml" />
+  </ItemGroup>
+</Project>

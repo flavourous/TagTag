@@ -9,26 +9,15 @@ namespace TagTag.Backend
 {
     public class Presenter
     {
-        public static void RunTests(IPlatform plat)
-        {
-            var pt = new PresenterTester((m, v) =>
-            {
-                var p = new Presenter(m, v, plat);
-                p.Present();
-                return p;
-            }, plat);
-            pt.Run();
-        }
-
         // Static initator.  Could be Singleton.
         public static void Start(IView initiator, IPlatform platform)
         {
-            // We'll get the remaining bits of the triad
-            IModel model = new ModelSQLite(platform);
+            Start(initiator, platform, new ModelLiteDb(platform));
+        }
 
+        public static void Start(IView initiator, IPlatform platform, IModel model)
+        {
             Presenter presenter = new Presenter(model, initiator, platform);
-
-            // then begin
             presenter.Present();
         }
 

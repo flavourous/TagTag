@@ -1,0 +1,137 @@
+using LiteDB;
+
+namespace TagTag.Backend;
+
+internal abstract class EntityDocument
+{
+    [BsonId]
+    public Guid Id { get; set; }
+
+    public DateTime Created { get; set; }
+    public string Name { get; set; } = "";
+    public List<Guid> TagIds { get; set; } = [];
+}
+
+internal sealed class NoteDocument : EntityDocument
+{
+    public string Text { get; set; } = "";
+}
+
+internal sealed class TagDocument : EntityDocument;
+
+public sealed class ModelLiteDb : IModel, IEntityManager, IDisposable
+{
+    private const string NotesCollection = "notes";
+    private const string TagsCollection = "tags";
+
+    private readonly LiteDatabase database;
+    private readonly ILiteCollection<NoteDocument> notes;
+    private readonly ILiteCollection<TagDocument> tags;
+
+    public ModelLiteDb(IPlatform platform)
+    {
+        Directory.CreateDirectory(platform.AppData);
+        database = new LiteDatabase(Path.Combine(platform.AppData, "data.db"));
+        notes = database.GetCollection<NoteDocument>(NotesCollection);
+        tags = database.GetCollection<TagDocument>(TagsCollection);
+        notes.EnsureIndex(note => note.TagIds);
+        tags.EnsureIndex(tag => tag.TagIds);
+    }
+
+    public IEntityManager eman => this;
+
+    public void AddTag(IEntity entity, ITag tag) => UpdateTagMembership(entity, tag, add: true);
+
+    public void RemoveTag(IEntity entity, ITag tag) => UpdateTagMembership(entity, tag, add: false);
+
+    public void DeleteEntity(IEntity entity)
+    {
+        if (entity is not EntityViewModel viewModel) return;
+
+        var entityId = viewModel.Id;
+        foreach (var note in notes.FindAll().Where(note => note.TagIds.Remove(entityId))) notes.Update(note);
+        foreach (var tag in tags.FindAll().Where(tag => tag.TagIds.Remove(entityId))) tags.Update(tag);
+
+        if (viewModel is NoteViewModel) notes.Delete(entityId);
+        else if (viewModel is TagViewModel) tags.Delete(entityId);
+    }
+
+    public IEntity UpdateEntity(IEntity entity)
+    {
+        if (entity is NoteViewModel note) notes.Upsert(note.Document);
+        else if (entity is TagViewModel tag) tags.Upsert(tag.Document);
+        return entity;
+    }
+
+    public T CreateEntity<T>(object id) where T : IEntity
+    {
+        var document = EntityDocumentFactory.Create<T>(DateTime.Now);
+        return (T)(IEntity)(document switch
+        {
+            NoteDocument note => new NoteViewModel(this, note),
+            TagDocument tag => new TagViewModel(this, tag),
+            _ => throw new NotSupportedException($"Unsupported entity type {typeof(T).Name}.")
+        });
+    }
+
+    public IEnumerable<IEntity> GetEntities() =>
+        notes.FindAll().Select(note => (IEntity)new NoteViewModel(this, note))
+            .Concat(tags.FindAll().Select(tag => (IEntity)new TagViewModel(this, tag)));
+
+    public void Dispose() => database.Dispose();
+
+    private void UpdateTagMembership(IEntity entity, ITag tag, bool add)
+    {
+        if (entity is not EntityViewModel entityViewModel || tag is not TagViewModel tagViewModel) return;
+
+        var tagIds = entityViewModel.Document.TagIds;
+        if (add && !tagIds.Contains(tagViewModel.Id)) tagIds.Add(tagViewModel.Id);
+        if (!add) tagIds.Remove(tagViewModel.Id);
+        UpdateEntity(entityViewModel);
+    }
+
+    private IEnumerable<ITag> GetTags(EntityDocument document) =>
+        tags.Find(tag => document.TagIds.Contains(tag.Id))
+            .Select(tag => (ITag)new TagViewModel(this, tag));
+
+    private abstract class EntityViewModel(ModelLiteDb model, EntityDocument document) : IEntity
+    {
+        protected ModelLiteDb Model { get; } = model;
+        internal EntityDocument Document { get; } = document;
+        public Guid Id => Document.Id;
+        public string name { get => Document.Name; set => Document.Name = value; }
+        public DateTime created => Document.Created;
+        public IEnumerable<ITag> tags => Model.GetTags(Document);
+
+        public override bool Equals(object? obj) => obj is EntityViewModel other && Id == other.Id;
+        public override int GetHashCode() => Id.GetHashCode();
+    }
+
+    private sealed class NoteViewModel(ModelLiteDb model, NoteDocument document) : EntityViewModel(model, document), INote
+    {
+        internal new NoteDocument Document => (NoteDocument)base.Document;
+        public string text { get => Document.Text; set => Document.Text = value; }
+    }
+
+    private sealed class TagViewModel(ModelLiteDb model, TagDocument document) : EntityViewModel(model, document), ITag
+    {
+        internal new TagDocument Document => (TagDocument)base.Document;
+    }
+
+    private static class EntityDocumentFactory
+    {
+        public static EntityDocument Create<T>(DateTime created) where T : IEntity
+        {
+            EntityDocument document = typeof(T) switch
+            {
+                var type when type == typeof(INote) => new NoteDocument(),
+                var type when type == typeof(ITag) => new TagDocument(),
+                _ => throw new NotSupportedException($"Unsupported entity type {typeof(T).Name}.")
+            };
+
+            document.Id = Guid.NewGuid();
+            document.Created = created;
+            return document;
+        }
+    }
+}
