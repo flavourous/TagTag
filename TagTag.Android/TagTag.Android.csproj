@@ -2,15 +2,32 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0-android</TargetFramework>
+    <Nullable>enable</Nullable>
     <ApplicationId>com.flavourous.tagtag</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>aab</AndroidPackageFormat>
     <SupportedOSPlatformVersion>26</SupportedOSPlatformVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AndroidResource Include="Icon.png">
+      <Link>Resources\drawable\Icon.png</Link>
+    </AndroidResource>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <AndroidKeyStore>True</AndroidKeyStore>
+    <AndroidSigningKeyStore>tagtag.keystore</AndroidSigningKeyStore>
+    <AndroidSigningKeyAlias>tagtag</AndroidSigningKeyAlias>
+    <AndroidSigningKeyPass>storepassword</AndroidSigningKeyPass>
+    <AndroidSigningStorePass>storepassword</AndroidSigningStorePass>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Avalonia.Android" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\TagTag\TagTag.csproj" />
     <ProjectReference Include="..\TagTag.Backend\TagTag.Backend.csproj" />
