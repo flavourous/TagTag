@@ -42,14 +42,14 @@ public sealed class PresenterTests : IDisposable
         view.Eman.DeleteEntity(note2);
         AssertMenuAndDetail(view, menuCount: 3, detailCount: 1);
 
-        Create<INote>(view.Eman, view.Menu.MenuId, "LOLZOR");
-        Create<INote>(view.Eman, view.Menu.MenuId, "LOLZOR");
-        Create<INote>(view.Eman, view.Menu.MenuId, "LOLZOR");
+        Create<INote>(view.Eman, "LOLZOR");
+        Create<INote>(view.Eman, "LOLZOR");
+        Create<INote>(view.Eman, "LOLZOR");
         AssertMenuAndDetail(view, menuCount: 6, detailCount: 4);
 
         Activate(view.Menu, "tag 1");
         const string tagBasedNoteName = "Testing that we get the tag based on menu position";
-        Create<INote>(view.Eman, view.Menu.MenuId, tagBasedNoteName);
+        Create<INote>(view.Eman, tagBasedNoteName);
         Assert.Single(view.Menu.Items, item => item.entity.name == tagBasedNoteName);
 
         view.Tagger.BeginTagging(note1);
@@ -70,7 +70,7 @@ public sealed class PresenterTests : IDisposable
         Activate(view.Tagger, "tag 1");
         Assert.Single(view.Tagger.Items);
         const string nestedTagName = "Testing tag";
-        Create<ITag>(view.Eman, view.Tagger.MenuId, nestedTagName);
+        Create<ITag>(view.Eman, nestedTagName);
         Assert.Single(view.Tagger.Items, item => item.entity.name == nestedTagName);
 
         view.Menu.GoBack();
@@ -80,7 +80,7 @@ public sealed class PresenterTests : IDisposable
         }
 
         Assert.Empty(view.Menu.Items);
-        Create<ITag>(view.Eman, root: null, "Root Tag");
+        Create<ITag>(view.Eman, "Root Tag");
         Assert.Single(view.Menu.Items);
     }
 
@@ -92,8 +92,8 @@ public sealed class PresenterTests : IDisposable
 
         using (var model = new ModelLiteDb(platform))
         {
-            var tag = Create<ITag>(model.eman, null, "Work");
-            var note = Create<INote>(model.eman, null, "Plan", tag);
+            var tag = Create<ITag>(model.eman, "Work");
+            var note = Create<INote>(model.eman, "Plan", tag);
             note.text = "Prepare the LiteDB migration.";
             model.eman.UpdateEntity(note);
         }
@@ -113,21 +113,21 @@ public sealed class PresenterTests : IDisposable
 
     private static void CreateSampleModel(IModel model)
     {
-        var tag1 = Create<ITag>(model.eman, null, "tag 1");
-        var tag2 = Create<ITag>(model.eman, null, "tag 2");
-        var tag3 = Create<ITag>(model.eman, null, "tag 3", tag1);
+        var tag1 = Create<ITag>(model.eman, "tag 1");
+        var tag2 = Create<ITag>(model.eman, "tag 2");
+        var tag3 = Create<ITag>(model.eman, "tag 3", tag1);
 
-        Create<INote>(model.eman, null, "note 1");
-        Create<INote>(model.eman, null, "note 2");
-        Create<INote>(model.eman, null, "note 3", tag1);
-        Create<INote>(model.eman, null, "note 4", tag2);
-        Create<INote>(model.eman, null, "note 5", tag3);
-        Create<INote>(model.eman, null, "note 6", tag1, tag2);
+        Create<INote>(model.eman, "note 1");
+        Create<INote>(model.eman, "note 2");
+        Create<INote>(model.eman, "note 3", tag1);
+        Create<INote>(model.eman, "note 4", tag2);
+        Create<INote>(model.eman, "note 5", tag3);
+        Create<INote>(model.eman, "note 6", tag1, tag2);
     }
 
-    private static T Create<T>(IEntityManager entityManager, object? root, string name, params ITag[] tags) where T : IEntity
+    private static T Create<T>(IEntityManager entityManager, string name, params ITag[] tags) where T : IEntity
     {
-        var entity = entityManager.CreateEntity<T>(root!);
+        var entity = entityManager.CreateEntity<T>();
         entity.name = name;
         foreach (var tag in tags)
         {
@@ -169,12 +169,10 @@ public sealed class PresenterTests : IDisposable
     private sealed class ManualMenu : ITagMenu
     {
         public IReadOnlyList<IMenuItem> Items { get; private set; } = [];
-        public object? MenuId { get; private set; }
 
         public event Action? MenuBack;
         public event Action<IEntity>? tagging;
 
-        object? IMenu.MenuID { set => MenuId = value; }
         public void SetMenuItems(IEnumerable<IMenuItem> items) => Items = items.ToArray();
         public void SetTree(IEnumerable<string> tree) { }
         public void GoBack() => MenuBack?.Invoke();

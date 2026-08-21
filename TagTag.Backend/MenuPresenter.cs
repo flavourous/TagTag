@@ -67,7 +67,6 @@ namespace TagTag.Backend
                 var menuItems = strat.GetItems(r, models, this);
                 view.SetMenuItems(menuItems);
                 view.SetTree((from rt in root select rt.name).Reverse());
-                view.MenuID = r;
             }
             else esel = true;
             selected(en);

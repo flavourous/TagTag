@@ -15,7 +15,7 @@ namespace TagTag.Backend
             Start(initiator, platform, new ModelLiteDb(platform));
         }
 
-        public static void Start(IView initiator, IPlatform platform, IModel model)
+        internal static void Start(IView initiator, IPlatform platform, IModel model)
         {
             Presenter presenter = new Presenter(model, initiator, platform);
             presenter.Present();
@@ -56,7 +56,7 @@ namespace TagTag.Backend
 
             // attach some stuff
             LinkMenuPresenters(main_menu, tag_menu);
-            model_proxy = new EManProxy(model);
+            model_proxy = new EManProxy(model, view.menu, main_menu);
             model_proxy.changed += main_menu.Refresh;
             model_proxy.changed += tag_menu.Refresh;
             view.eman = model_proxy;

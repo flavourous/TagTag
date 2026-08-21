@@ -28,7 +28,6 @@ public sealed partial class MenuViewModel : ReactiveObject, ITagMenu
     [Reactive] private ObservableCollection<IMenuItem> _items = [];
     [Reactive] private string _breadcrumb = "All items";
     [Reactive] private bool _canGoBack;
-    [Reactive] private object? _currentId;
 
     public event Action? MenuBack;
     public event Action<IEntity>? tagging;
@@ -47,8 +46,6 @@ public sealed partial class MenuViewModel : ReactiveObject, ITagMenu
         Breadcrumb = parts.Length == 0 ? "All items" : string.Join(" → ", parts);
         CanGoBack = parts.Length > 0;
     }
-
-    object? IMenu.MenuID { set => CurrentId = value; }
 }
 
 public sealed partial class MainViewModel : ReactiveObject, IView
@@ -83,7 +80,7 @@ public sealed partial class MainViewModel : ReactiveObject, IView
     private void NewNote()
     {
         if (Eman is null) return;
-        EditingNote = Eman.CreateEntity<INote>(Menu.CurrentId!);
+        EditingNote = Eman.CreateEntity<INote>();
         IsEditing = true;
     }
 
@@ -91,7 +88,7 @@ public sealed partial class MainViewModel : ReactiveObject, IView
     private void NewTag()
     {
         if (Eman is null || string.IsNullOrWhiteSpace(NewTagName)) return;
-        var tag = Eman.CreateEntity<ITag>(Menu.CurrentId!);
+        var tag = Eman.CreateEntity<ITag>();
         tag.name = NewTagName.Trim();
         Eman.UpdateEntity(tag);
         NewTagName = "";

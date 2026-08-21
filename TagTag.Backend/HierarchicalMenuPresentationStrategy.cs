@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace TagTag.Backend
 {
-    public class HierarchicalMenuPresentationStrategy : IMenuPresentationStrategy
+    class HierarchicalMenuPresentationStrategy : IMenuPresentationStrategy
     {
         class HMi : IMenuItem
         {

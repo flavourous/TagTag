@@ -19,7 +19,7 @@ namespace TagTag.Backend
             {typeof(ITag), () => new MockTag() }
         };
         public event Action<IEntity> created;
-        public T CreateEntity<T>(Object ident /* used only by presenter but didnt decorate */) where T : IEntity
+        public T CreateEntity<T>() where T : IEntity
         {
             var n = creators[typeof(T)]();
             n.IsCommitted = false;

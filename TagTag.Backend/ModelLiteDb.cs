@@ -63,7 +63,7 @@ public sealed class ModelLiteDb : IModel, IEntityManager, IDisposable
         return entity;
     }
 
-    public T CreateEntity<T>(object id) where T : IEntity
+    public T CreateEntity<T>() where T : IEntity
     {
         var document = EntityDocumentFactory.Create<T>(DateTime.Now);
         return (T)(IEntity)(document switch

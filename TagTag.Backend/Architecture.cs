@@ -16,7 +16,6 @@ namespace TagTag.Backend
         event Action MenuBack;
         void SetMenuItems(IEnumerable<IMenuItem> items);
         void SetTree(IEnumerable<String> tree);
-        Object MenuID { set; }
     }
     public interface ITagMenu : IMenu
     {
@@ -28,30 +27,33 @@ namespace TagTag.Backend
         IEntity entity { get; }
         void Activate();
     }
-    public interface IDetailPresentationStrategy
+
+    internal interface IDetailPresentationStrategy
     {
         IEnumerable<IEntity> GetEntities(IEntity selected, IEnumerable<IEntity> all);
     }
-    public interface IMenuPresentationStrategy
+    internal interface IMenuPresentationStrategy
     {
         IEnumerable<IMenuItem> GetItems(ITag root, IEnumerable<IEntity> models, IEntityHooks hooks);
     }
-    public interface IEntityHooks
+    internal interface IEntityHooks
     {
+        ITag head { get; }
         Action<IEntity> activated { get; }
         Action<IEntity, bool> ticked { get; }
         Func<IEntity, bool> isticked { get; }
     }
-    public interface IModel
+    internal interface IModel
     {
         IEnumerable<IEntity> GetEntities();
         IEntityManager eman { get; }
         void AddTag(IEntity entity, ITag tag);
         void RemoveTag(IEntity entity, ITag tag);
     }
+
     public interface IEntityManager
     {
-        T CreateEntity<T>(Object id) where T : IEntity;
+        T CreateEntity<T>() where T : IEntity;
         void DeleteEntity(IEntity d);
         IEntity UpdateEntity(IEntity e);
     }
@@ -73,12 +75,6 @@ namespace TagTag.Backend
     public interface ITag : IEntity
     {
 
-    }
-    // The only reason for it to be generic is so that it could be implimented
-    // many times on an object for different types. Encoding type info.
-    public interface IManyEntity<T> where T : IEntity
-    {
-        IEnumerable<T> entities { get; }
     }
     public interface INote : IEntity
     {

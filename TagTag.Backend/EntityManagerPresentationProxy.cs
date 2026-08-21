@@ -7,18 +7,13 @@ using System.Threading.Tasks;
 namespace TagTag.Backend
 {
     delegate void emcd(ITag removed = null);
-    class EManProxy : IEntityManager
+    class EManProxy(IModel model, IMenu menu, IEntityHooks menuPresenter) : IEntityManager
     {
         public event emcd changed = delegate { };
-        readonly IModel model;
-        public EManProxy(IModel model)
+        public T CreateEntity<T>() where T : IEntity
         {
-            this.model = model;
-        }
-        public T CreateEntity<T>(Object id) where T : IEntity
-        {
-            var ret = model.eman.CreateEntity<T>(null);
-            var ct = id as ITag;
+            var ret = model.eman.CreateEntity<T>();
+            var ct = menuPresenter.head;
             if (ct != null)
             {
                 model.AddTag(ret, ct);
