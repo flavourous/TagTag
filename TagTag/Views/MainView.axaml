@@ -2,80 +2,58 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:TagTag.ViewModels"
              x:Class="TagTag.Views.MainView"
-             x:DataType="vm:MainViewModel">
-  <Grid ColumnDefinitions="280,*" RowDefinitions="*">
-    <Border Grid.Column="0" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" Padding="12">
-      <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
-        <TextBlock Text="TagTag" FontSize="24" FontWeight="Bold" />
-        <Grid Grid.Row="1" ColumnDefinitions="Auto,*" ColumnSpacing="8">
-          <Button Content="←" Command="{Binding Menu.GoBackCommand}" IsEnabled="{Binding Menu.CanGoBack}" />
-          <TextBlock Grid.Column="1" Text="{Binding Menu.Breadcrumb}" VerticalAlignment="Center" TextWrapping="Wrap" />
-        </Grid>
-        <ListBox Grid.Row="2" ItemsSource="{Binding Menu.Items}" SelectedItem="{x:Null}">
-          <ListBox.ItemTemplate>
-            <DataTemplate>
-              <Button HorizontalContentAlignment="Stretch" Command="{Binding DataContext.Menu.ActivateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
-                <TextBlock Text="{Binding entity.name}" />
-              </Button>
-            </DataTemplate>
-          </ListBox.ItemTemplate>
-        </ListBox>
-        <StackPanel Grid.Row="3" Spacing="6">
-          <TextBox PlaceholderText="New tag" Text="{Binding NewTagName}" />
-          <Button Content="Add tag" Command="{Binding NewTagCommand}" />
-          <Button Content="New note" Command="{Binding NewNoteCommand}" />
-        </StackPanel>
-      </Grid>
-    </Border>
-    <Grid Grid.Column="1" RowDefinitions="Auto,*">
-      <TextBlock Margin="20,16,20,8" Text="Notes" FontSize="24" FontWeight="Bold" />
-      <ListBox Grid.Row="1" Margin="12" ItemsSource="{Binding DetailItems}">
-        <ListBox.ItemTemplate>
-          <DataTemplate>
-            <Border Padding="10" Margin="0,0,0,6" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="0,0,0,1">
-              <Grid ColumnDefinitions="*,Auto,Auto,Auto" RowDefinitions="Auto,Auto">
-                <TextBlock Text="{Binding Name}" FontWeight="Bold" />
-                <TextBlock Grid.Column="1" Text="{Binding Date}" Foreground="Gray" Margin="8,0" />
-                <Button Grid.Column="2" Content="Tag" Command="{Binding DataContext.TagCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding Entity}" />
-                <Button Grid.Column="3" Content="Delete" Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding Entity}" />
-                <Button Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" Content="Edit" Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding Entity}" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding Details}" TextWrapping="Wrap" Foreground="Gray" Margin="8,0" VerticalAlignment="Center" />
-              </Grid>
-            </Border>
-          </DataTemplate>
-        </ListBox.ItemTemplate>
-      </ListBox>
-    </Grid>
-    <Border Grid.ColumnSpan="2" IsVisible="{Binding IsEditing}" Background="#99000000">
-      <Border Width="520" Padding="20" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12">
-          <TextBox PlaceholderText="Title" Text="{Binding EditingNote.name}" />
-          <TextBox Grid.Row="1" PlaceholderText="Note" Text="{Binding EditingNote.text}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="260" />
-          <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-            <Button Content="Cancel" Command="{Binding CloseEditorCommand}" />
-            <Button Content="Save" Command="{Binding SaveNoteCommand}" />
-          </StackPanel>
-        </Grid>
-      </Border>
-    </Border>
-    <Border Grid.ColumnSpan="2" IsVisible="{Binding IsTagging}" Background="#99000000">
-      <Border Width="420" Padding="20" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
-          <TextBlock Text="{Binding TaggerTitle}" FontSize="20" FontWeight="Bold" />
-          <Grid Grid.Row="1" ColumnDefinitions="Auto,*" ColumnSpacing="8">
-            <Button Content="←" Command="{Binding Tagger.GoBackCommand}" IsEnabled="{Binding Tagger.CanGoBack}" />
-            <TextBlock Grid.Column="1" Text="{Binding Tagger.Breadcrumb}" VerticalAlignment="Center" />
+             x:DataType="vm:MainViewModel"
+             x:Name="uc">
+  <UserControl.Styles>
+    <Style Selector="Button">
+      <Setter Property="Padding" Value="3,1"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="#ffffff"/>
+    </Style>
+    <Style Selector="TextBox">
+      <Setter Property="Padding" Value="3,0"/>
+      <Setter Property="MinHeight" Value="0"/>
+    </Style>
+  </UserControl.Styles>
+  <Grid RowDefinitions="auto,*,auto,*" RowSpacing="7" Margin="7">
+    <TextBlock Text="Tagcloud" FontSize="20" FontWeight="ExtraLight" Margin="27,0,0,0"/>
+    <Button HorizontalAlignment="Right" Content="＋" Command="{Binding NewTagCommand}" Margin="0,0,1,0"/>
+    <ScrollViewer Grid.Row="1" >
+    <ItemsControl ItemsSource="{Binding TagCloud.Items}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <Grid ColumnDefinitions="auto,auto,*,auto" ColumnSpacing="7">
+            <Button Command="{Binding BeginEditNameCommand}" Content="🖊️"/>
+            <CheckBox IsChecked="{Binding Selected, Mode=TwoWay}" Grid.Column="1" Padding="0" VerticalAlignment="Center"/>
+            <TextBlock IsVisible="{Binding !IsEditing}" Text="{Binding Name}" Grid.Column="2" VerticalAlignment="Center" Margin="0,0,0,1" />
+            <TextBox KeyDown="TextBox_KeyDown" IsVisible="{Binding IsEditing}" PropertyChanged="TextBox_PropertyChanged" Text="{Binding Name}" Grid.Column="2" VerticalAlignment="Center" Margin="-4,0,0,1" />
+            <Button Grid.Column="3" Content="🗑" FontSize="20" Command="{Binding #uc.DataContext.DeleteEntityCommand}" CommandParameter="{Binding entity}"/>
           </Grid>
-          <ListBox Grid.Row="2" ItemsSource="{Binding Tagger.Items}">
-            <ListBox.ItemTemplate>
-              <DataTemplate>
-                <CheckBox Content="{Binding entity.name}" IsChecked="{Binding ticked}" Command="{Binding DataContext.Tagger.ActivateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
-              </DataTemplate>
-            </ListBox.ItemTemplate>
-          </ListBox>
-          <Button Grid.Row="3" Content="Done" Command="{Binding CloseTaggerCommand}" HorizontalAlignment="Right" />
-        </Grid>
-      </Border>
-    </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+    </ScrollViewer>
+
+    <TextBlock Grid.Row="2" Text="Entities" FontSize="18" FontWeight="ExtraLight"  Margin="27,0,0,0"/>
+    <Button Grid.Row="2" HorizontalAlignment="Right" Content="＋" Command="{Binding NewNoteCommand}" Margin="0,0,1,0"/>
+    <ScrollViewer Grid.Row="3">
+    <ItemsControl ItemsSource="{Binding DetailItems}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+            <Grid ColumnDefinitions="auto,*,auto,auto" RowDefinitions="auto,auto" ColumnSpacing="7" RowSpacing="5">
+              <Button Command="{Binding BeginEditNameCommand}" Content="🖊️"/>
+              <TextBlock IsVisible="{Binding !IsEditing}" Text="{Binding Name}" FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="0,0,0,2"/>
+              <TextBox PropertyChanged="TextBox_PropertyChanged" KeyDown="TextBox_KeyDown" IsVisible="{Binding IsEditing}" Text="{Binding Name}" FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="-4,0,0,2"/>
+              <TextBlock Grid.Column="2" Text="{Binding Date}" Foreground="Gray" VerticalAlignment="Center" />
+              <Button Content="🗑" FontSize="20" Grid.Column="3" VerticalAlignment="Top" Command="{Binding #uc.DataContext.DeleteEntityCommand}" CommandParameter="{Binding Entity}"/>
+              <Button IsVisible="{Binding !IsEditingDetail}" Command="{Binding BeginEditDetailCommand}" Content="🖊️" Grid.Row="1" VerticalAlignment="Top"/>
+              <Button IsVisible="{Binding IsEditingDetail}" Command="{Binding SaveCommand}" Content="💾" Grid.Row="1" VerticalAlignment="Top"/>
+              <TextBlock MaxHeight="200" IsVisible="{Binding !IsEditingDetail}" FontWeight="Light" Margin="0,2,0,0" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Text}" TextWrapping="Wrap" MinHeight="10" TextTrimming="CharacterEllipsis"/>
+              <TextBox PropertyChanged="TextBox_PropertyChanged" MaxHeight="200" IsVisible="{Binding IsEditingDetail}" FontWeight="Light" Margin="-4,1,0,0" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Text}" TextWrapping="Wrap" MinHeight="10" AcceptsReturn="True" AcceptsTab="True"/>
+            </Grid>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+    </ScrollViewer>
   </Grid>
 </UserControl>

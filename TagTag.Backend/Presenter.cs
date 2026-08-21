@@ -17,68 +17,38 @@ namespace TagTag.Backend
 
         internal static void Start(IView initiator, IPlatform platform, IModel model)
         {
-            Presenter presenter = new Presenter(model, initiator, platform);
+            var presenter = new PresenterImpl(model, initiator, platform);
             presenter.Present();
         }
 
-        // Injected dependencies
-        readonly IModel model;
-        readonly IView view;
-
-        // Currently used strategies.
-        IMenuPresentationStrategy menuStrategy, taggerStrategy;
-        IDetailPresentationStrategy detailStrategy;
-
-        // Only constructable by that static above.
-        readonly IPlatform platform;
-        private Presenter(IModel model, IView view, IPlatform platform)
+        class PresenterImpl(IModel model, IView view, IPlatform platform)
         {
-            this.platform = platform;
-            this.model = model;
-            this.view = view;
+            // Run presentation.
+            TagCloudPresenter tagMenu;
+            public void Present()
+            {
+                tagMenu = new TagCloudPresenter(view.tagger, model, Refresh);
+                view.eman = new EManProxy(model, tagMenu, DataRefresh);
+                DataRefresh();
+            }
 
-            taggerStrategy = new HierarchicalMenuPresentationStrategy(true); // possibly looks like decorator instead
-            menuStrategy = new HierarchicalMenuPresentationStrategy(false);  // of args there.
-            detailStrategy = new NoTagFlowingDetailStrategy();
-        }
+            private void DataRefresh()
+            {
+                Refresh();
+                tagMenu.Refresh();
+            }
 
-        // Run presentation.
-        MenuPresenter main_menu, tag_menu;
-        EManProxy model_proxy;
-        void Present()
-        {
-            // main menu presenter
-            main_menu = new MenuPresenter(view.menu, model, menuStrategy);
-            main_menu.selected += Main_menu_selected;
-
-            // tag menu presenter
-            tag_menu = new MenuPresenter(view.tagger, model, taggerStrategy);
-
-            // attach some stuff
-            LinkMenuPresenters(main_menu, tag_menu);
-            model_proxy = new EManProxy(model, view.menu, main_menu);
-            model_proxy.changed += main_menu.Refresh;
-            model_proxy.changed += tag_menu.Refresh;
-            view.eman = model_proxy;
-
-            // use starting strategy to send menu
-            main_menu.SelectEntity(null);
-        }
-
-        void LinkMenuPresenters(params MenuPresenter[] pres)
-        {
-            foreach (var p in pres)
-                p.changed += () =>
+            private void Refresh()
+            {
+                bool Match(IEntity e) => tagMenu.filter.Any() switch
                 {
-                    foreach (var pr in pres)
-                        pr.Refresh();
+                    true => tagMenu.filter.All(e.tags.Contains),
+                    false => !e.tags.Any()
                 };
-        }
 
-        private void Main_menu_selected(IEntity en)
-        {
-            var entities = detailStrategy.GetEntities(en, model.GetEntities());
-            view.SetDetailItems(entities);
+                var entities = model.GetEntities().Where(x => x is not ITag && Match(x));
+                view.SetDetailItems(entities);
+            }
         }
     }
 }

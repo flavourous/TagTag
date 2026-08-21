@@ -6,35 +6,24 @@ using System.Threading.Tasks;
 
 namespace TagTag.Backend
 {
-    delegate void emcd(ITag removed = null);
-    class EManProxy(IModel model, IMenu menu, IEntityHooks menuPresenter) : IEntityManager
+    class EManProxy(IModel model, IEntityHooks menuPresenter, Action changed) : IEntityManager
     {
-        public event emcd changed = delegate { };
         public T CreateEntity<T>() where T : IEntity
         {
             var ret = model.eman.CreateEntity<T>();
-            var ct = menuPresenter.head;
-            if (ct != null)
-            {
-                model.AddTag(ret, ct);
-                rootTagsToUpdate[ret] = ct;
-            }
+            foreach (var tag in menuPresenter.filter) model.AddTag(ret, tag);
             return ret;
         }
+
         public void DeleteEntity(IEntity e)
         {
             model.eman.DeleteEntity(e);
-            changed(e as ITag);
+            changed();
         }
-        Dictionary<IEntity, ITag> rootTagsToUpdate = new Dictionary<IEntity, ITag>();
+
         public IEntity UpdateEntity(IEntity e)
         {
             var ret = model.eman.UpdateEntity(e);
-            if(rootTagsToUpdate.ContainsKey(e))
-            {
-                model.eman.UpdateEntity(rootTagsToUpdate[e]);
-                rootTagsToUpdate.Remove(e);
-            }
             changed();
             return ret;
         }

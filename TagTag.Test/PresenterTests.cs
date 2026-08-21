@@ -19,9 +19,9 @@ public sealed class PresenterTests : IDisposable
         Presenter.Start(view, platform, model);
 
         AssertMenuAndDetail(view, menuCount: 4, detailCount: 2);
-        Activate(view.Menu, "tag 1");
+        ToggleSelect(view.Menu, "tag 1");
         AssertMenuAndDetail(view, menuCount: 3, detailCount: 2);
-        Activate(view.Menu, "tag 3");
+        ToggleSelect(view.Menu, "tag 3");
         AssertMenuAndDetail(view, menuCount: 1, detailCount: 1);
         view.Menu.GoBack();
         AssertMenuAndDetail(view, menuCount: 3, detailCount: 2);
@@ -47,27 +47,27 @@ public sealed class PresenterTests : IDisposable
         Create<INote>(view.Eman, "LOLZOR");
         AssertMenuAndDetail(view, menuCount: 6, detailCount: 4);
 
-        Activate(view.Menu, "tag 1");
+        ToggleSelect(view.Menu, "tag 1");
         const string tagBasedNoteName = "Testing that we get the tag based on menu position";
         Create<INote>(view.Eman, tagBasedNoteName);
         Assert.Single(view.Menu.Items, item => item.entity.name == tagBasedNoteName);
 
         view.Tagger.BeginTagging(note1);
         Assert.All(view.Tagger.Items, item => Assert.IsAssignableFrom<ITag>(item.entity));
-        Assert.All(view.Tagger.Items, item => Assert.False(item.ticked));
+        Assert.All(view.Tagger.Items, item => Assert.False(item.selected));
         Assert.Equal(2, view.Tagger.Items.Count);
 
         var tagItem = Find(view.Tagger, tag1);
-        tagItem.ticked = true;
+        tagItem.selected = true;
         Assert.Contains(tag1, note1.tags);
         view.Tagger.BeginTagging(note1);
-        Assert.True(Find(view.Tagger, tag1).ticked);
+        Assert.True(Find(view.Tagger, tag1).selected);
 
-        Find(view.Tagger, tag1).ticked = false;
+        Find(view.Tagger, tag1).selected = false;
         view.Tagger.BeginTagging(note1);
-        Assert.False(Find(view.Tagger, tag1).ticked);
+        Assert.False(Find(view.Tagger, tag1).selected);
 
-        Activate(view.Tagger, "tag 1");
+        ToggleSelect(view.Tagger, "tag 1");
         Assert.Single(view.Tagger.Items);
         const string nestedTagName = "Testing tag";
         Create<ITag>(view.Eman, nestedTagName);
@@ -141,11 +141,14 @@ public sealed class PresenterTests : IDisposable
     private static T Find<T>(IModel model, string name) where T : class, IEntity =>
         Assert.IsAssignableFrom<T>(Assert.Single(model.GetEntities(), entity => entity.name == name));
 
-    private static IMenuItem Find(ManualMenu menu, ITag tag) =>
+    private static IMenuItem<ITag> Find(ManualMenu menu, ITag tag) =>
         Assert.Single(menu.Items, item => item.entity.Equals(tag));
 
-    private static void Activate(ManualMenu menu, string name) =>
-        Assert.Single(menu.Items, item => item.entity.name == name).Activate();
+    private static void ToggleSelect(ManualMenu menu, string name) 
+    {
+        var entity = Assert.Single(menu.Items, item => item.entity.name == name);
+        entity.selected = !entity.selected;
+    }
 
     private static void AssertMenuAndDetail(ManualView view, int menuCount, int detailCount)
     {
@@ -161,22 +164,21 @@ public sealed class PresenterTests : IDisposable
         public IReadOnlyList<IEntity> Detail { get; private set; } = [];
 
         IEntityManager IView.eman { set => Eman = value; }
-        IMenu IView.menu => Menu;
         ITagMenu IView.tagger => Tagger;
         public void SetDetailItems(IEnumerable<IEntity> items) => Detail = items.ToArray();
     }
 
     private sealed class ManualMenu : ITagMenu
     {
-        public IReadOnlyList<IMenuItem> Items { get; private set; } = [];
+        public IReadOnlyList<IMenuItem<ITag>> Items { get; private set; } = [];
 
         public event Action? MenuBack;
-        public event Action<IEntity>? tagging;
+        public IEntity? tagging {get;set;}
 
-        public void SetMenuItems(IEnumerable<IMenuItem> items) => Items = items.ToArray();
+        public void SetItems(IEnumerable<IMenuItem<ITag>> items) => Items = items.ToArray();
         public void SetTree(IEnumerable<string> tree) { }
         public void GoBack() => MenuBack?.Invoke();
-        public void BeginTagging(IEntity entity) => tagging?.Invoke(entity);
+        public void BeginTagging(IEntity entity) => tagging = entity;
     }
 
     private sealed class TestPlatform(string appData) : IPlatform

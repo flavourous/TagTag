@@ -1,19 +1,29 @@
 using System.Collections.ObjectModel;
+using DynamicData;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;
 using TagTag.Backend;
 
 namespace TagTag.ViewModels;
 
-public sealed class DetailItemViewModel
+public sealed partial class DetailItemViewModel(IEntity entity, IEntityManager man) : ReactiveObject
 {
-    public DetailItemViewModel(IEntity entity) => Entity = entity;
-
-    public IEntity Entity { get; }
-    public string Name => string.IsNullOrWhiteSpace(Entity.name) ? "<empty>" : Entity.name;
+    public IEntity Entity { get; } = entity;
+    public string Name { get; set; } = string.IsNullOrWhiteSpace(entity.name) ? "<empty>" : entity.name;
     public string Date => Entity.created.ToString("d");
-    public string Details => Entity is INote note ? ToEllipsis(note.text, 256) : "";
+    public string Text { get; set; } = entity is INote note ? note.text : "";
     public bool IsNote => Entity is INote;
+
+    [Reactive] public bool _isEditing, _isEditingDetail;
+    [ReactiveCommand] public void BeginEditName() => IsEditing = true;
+    [ReactiveCommand] public void BeginEditDetailCommand() => IsEditingDetail = true;
+    [ReactiveCommand] public void Save()
+    {
+        IsEditingDetail = IsEditing = false;        
+        Entity.name = Name;
+        if(Entity is INote n) n.text = Text;
+        man.UpdateEntity(Entity);
+    }
 
     private static string ToEllipsis(string? value, int length)
     {
@@ -23,114 +33,66 @@ public sealed class DetailItemViewModel
     }
 }
 
-public sealed partial class MenuViewModel : ReactiveObject, ITagMenu
+public sealed partial class TagItemViewModel(IMenuItem<ITag> tagItem, IEntityManager man) : ReactiveObject
 {
-    [Reactive] private ObservableCollection<IMenuItem> _items = [];
-    [Reactive] private string _breadcrumb = "All items";
-    [Reactive] private bool _canGoBack;
+    public bool Selected { get => tagItem.selected; set => tagItem.selected = value; }
+    public string Name { get; set; } = string.IsNullOrWhiteSpace(tagItem.entity.name) ? "<empty>" : tagItem.entity.name;
 
-    public event Action? MenuBack;
-    public event Action<IEntity>? tagging;
-
-    [ReactiveCommand]
-    public void GoBack() => MenuBack?.Invoke();
-
-    public void BeginTagging(IEntity entity) => tagging?.Invoke(entity);
-
-    [ReactiveCommand]
-    public void Activate(IMenuItem? item) => item?.Activate();
-    public void SetMenuItems(IEnumerable<IMenuItem> items) => Items = new ObservableCollection<IMenuItem>(items);
-    public void SetTree(IEnumerable<string> tree)
+    [Reactive] public bool _isEditing;
+    [ReactiveCommand] public void BeginEditName() => IsEditing = true;
+    public void Save()
     {
-        var parts = tree.ToArray();
-        Breadcrumb = parts.Length == 0 ? "All items" : string.Join(" → ", parts);
-        CanGoBack = parts.Length > 0;
+        IsEditing = false;
+        tagItem.entity.name = Name;
+        man.UpdateEntity(tagItem.entity);
     }
 }
 
-public sealed partial class MainViewModel : ReactiveObject, IView
+public sealed partial class TagCloudViewModel : ReactiveObject, ITagMenu
 {
-    private readonly IPlatform platform;
+    public IEntityManager? Eman { get; set; }
 
-    public MainViewModel(IPlatform platform)
+    [Reactive] private ObservableCollection<TagItemViewModel> _items = [];
+    public IEntity tagging { get; set; }
+    public void SetItems(IEnumerable<IMenuItem<ITag>> items)
     {
-        this.platform = platform;
+        Items = [.. items.Select(x => new TagItemViewModel(x, Eman))];
+    }
+}
+
+public sealed partial class MainViewModel(IPlatform platform) : ReactiveObject, IView
+{
+    IEntityManager IView.eman { set => Eman = TagCloud.Eman = value; }
+    ITagMenu IView.tagger => TagCloud;
+
+    public TagCloudViewModel TagCloud { get; } = new();
+    public IEntityManager? Eman { get; private set; }
+
+    [Reactive] private ObservableCollection<DetailItemViewModel> _detailItems = [];
+    [ReactiveCommand]
+    public void NewNote()
+    {
+        var note = Eman.CreateEntity<INote>();
+        note.name = "new note";
+        Eman.UpdateEntity(note);
     }
 
-    public MenuViewModel Menu { get; } = new();
-    public MenuViewModel Tagger { get; } = new();
-    [Reactive] private ObservableCollection<DetailItemViewModel> _detailItems = [];
-    [Reactive] private INote? _editingNote;
-    [Reactive] private bool _isEditing;
-    [Reactive] private bool _isTagging;
-    [Reactive] private string _newTagName = "";
-    [Reactive] private string _taggerTitle = "Tags";
+    [ReactiveCommand]
+    public void NewTag()
+    {
+        var tag = Eman.CreateEntity<ITag>();
+        tag.name = "new tag";
+        Eman.UpdateEntity(tag);
+    }
 
-    public IEntityManager? Eman { get; private set; }
+    [ReactiveCommand] public void DeleteEntity(IEntity e) => Eman.DeleteEntity(e);
 
     public void Start()
     {
         Presenter.Start(this, platform);
     }
 
+
     public void SetDetailItems(IEnumerable<IEntity> items) =>
-        DetailItems = new ObservableCollection<DetailItemViewModel>(items.Select(item => new DetailItemViewModel(item)));
-
-    [ReactiveCommand]
-    private void NewNote()
-    {
-        if (Eman is null) return;
-        EditingNote = Eman.CreateEntity<INote>();
-        IsEditing = true;
-    }
-
-    [ReactiveCommand]
-    private void NewTag()
-    {
-        if (Eman is null || string.IsNullOrWhiteSpace(NewTagName)) return;
-        var tag = Eman.CreateEntity<ITag>();
-        tag.name = NewTagName.Trim();
-        Eman.UpdateEntity(tag);
-        NewTagName = "";
-    }
-
-    [ReactiveCommand]
-    private void SaveNote()
-    {
-        if (EditingNote is not null) Eman?.UpdateEntity(EditingNote);
-        IsEditing = false;
-        EditingNote = null;
-    }
-
-    [ReactiveCommand]
-    private void Edit(IEntity? entity)
-    {
-        if (entity is INote note)
-        {
-            EditingNote = note;
-            IsEditing = true;
-        }
-    }
-
-    [ReactiveCommand]
-    private void Delete(IEntity? entity) { if (entity is not null) Eman?.DeleteEntity(entity); }
-
-    [ReactiveCommand]
-    private void Tag(IEntity? entity)
-    {
-        if (entity is null) return;
-        TaggerTitle = $"Tagging {entity.name}";
-        Tagger.BeginTagging(entity);
-        IsTagging = true;
-    }
-
-    [ReactiveCommand]
-    private void CloseEditor() => IsEditing = false;
-
-    [ReactiveCommand]
-    private void CloseTagger() => IsTagging = false;
-
-    IEntityManager IView.eman { set => Eman = value; }
-    IMenu IView.menu => Menu;
-    ITagMenu IView.tagger => Tagger;
+        DetailItems = new ObservableCollection<DetailItemViewModel>(items.Select(item => new DetailItemViewModel(item, Eman)));
 }

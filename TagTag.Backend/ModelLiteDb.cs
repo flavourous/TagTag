@@ -46,20 +46,20 @@ public sealed class ModelLiteDb : IModel, IEntityManager, IDisposable
 
     public void DeleteEntity(IEntity entity)
     {
-        if (entity is not EntityViewModel viewModel) return;
+        if (entity is not EntityDbModel DbModel) return;
 
-        var entityId = viewModel.Id;
+        var entityId = DbModel.Id;
         foreach (var note in notes.FindAll().Where(note => note.TagIds.Remove(entityId))) notes.Update(note);
         foreach (var tag in tags.FindAll().Where(tag => tag.TagIds.Remove(entityId))) tags.Update(tag);
 
-        if (viewModel is NoteViewModel) notes.Delete(entityId);
-        else if (viewModel is TagViewModel) tags.Delete(entityId);
+        if (DbModel is NoteDbModel) notes.Delete(entityId);
+        else if (DbModel is TagDbModel) tags.Delete(entityId);
     }
 
     public IEntity UpdateEntity(IEntity entity)
     {
-        if (entity is NoteViewModel note) notes.Upsert(note.Document);
-        else if (entity is TagViewModel tag) tags.Upsert(tag.Document);
+        if (entity is NoteDbModel note) notes.Upsert(note.Document);
+        else if (entity is TagDbModel tag) tags.Upsert(tag.Document);
         return entity;
     }
 
@@ -68,33 +68,33 @@ public sealed class ModelLiteDb : IModel, IEntityManager, IDisposable
         var document = EntityDocumentFactory.Create<T>(DateTime.Now);
         return (T)(IEntity)(document switch
         {
-            NoteDocument note => new NoteViewModel(this, note),
-            TagDocument tag => new TagViewModel(this, tag),
+            NoteDocument note => new NoteDbModel(this, note),
+            TagDocument tag => new TagDbModel(this, tag),
             _ => throw new NotSupportedException($"Unsupported entity type {typeof(T).Name}.")
         });
     }
 
     public IEnumerable<IEntity> GetEntities() =>
-        notes.FindAll().Select(note => (IEntity)new NoteViewModel(this, note))
-            .Concat(tags.FindAll().Select(tag => (IEntity)new TagViewModel(this, tag)));
+        notes.FindAll().Select(note => (IEntity)new NoteDbModel(this, note))
+            .Concat(tags.FindAll().Select(tag => (IEntity)new TagDbModel(this, tag)));
 
     public void Dispose() => database.Dispose();
 
     private void UpdateTagMembership(IEntity entity, ITag tag, bool add)
     {
-        if (entity is not EntityViewModel entityViewModel || tag is not TagViewModel tagViewModel) return;
+        if (entity is not EntityDbModel entityDbModel || tag is not TagDbModel tagDbModel) return;
 
-        var tagIds = entityViewModel.Document.TagIds;
-        if (add && !tagIds.Contains(tagViewModel.Id)) tagIds.Add(tagViewModel.Id);
-        if (!add) tagIds.Remove(tagViewModel.Id);
-        UpdateEntity(entityViewModel);
+        var tagIds = entityDbModel.Document.TagIds;
+        if (add && !tagIds.Contains(tagDbModel.Id)) tagIds.Add(tagDbModel.Id);
+        if (!add) tagIds.Remove(tagDbModel.Id);
+        UpdateEntity(entityDbModel);
     }
 
     private IEnumerable<ITag> GetTags(EntityDocument document) =>
         tags.Find(tag => document.TagIds.Contains(tag.Id))
-            .Select(tag => (ITag)new TagViewModel(this, tag));
+            .Select(tag => (ITag)new TagDbModel(this, tag));
 
-    private abstract class EntityViewModel(ModelLiteDb model, EntityDocument document) : IEntity
+    private abstract class EntityDbModel(ModelLiteDb model, EntityDocument document) : IEntity
     {
         protected ModelLiteDb Model { get; } = model;
         internal EntityDocument Document { get; } = document;
@@ -103,17 +103,17 @@ public sealed class ModelLiteDb : IModel, IEntityManager, IDisposable
         public DateTime created => Document.Created;
         public IEnumerable<ITag> tags => Model.GetTags(Document);
 
-        public override bool Equals(object? obj) => obj is EntityViewModel other && Id == other.Id;
+        public override bool Equals(object? obj) => obj is EntityDbModel other && Id == other.Id;
         public override int GetHashCode() => Id.GetHashCode();
     }
 
-    private sealed class NoteViewModel(ModelLiteDb model, NoteDocument document) : EntityViewModel(model, document), INote
+    private sealed class NoteDbModel(ModelLiteDb model, NoteDocument document) : EntityDbModel(model, document), INote
     {
         internal new NoteDocument Document => (NoteDocument)base.Document;
         public string text { get => Document.Text; set => Document.Text = value; }
     }
 
-    private sealed class TagViewModel(ModelLiteDb model, TagDocument document) : EntityViewModel(model, document), ITag
+    private sealed class TagDbModel(ModelLiteDb model, TagDocument document) : EntityDbModel(model, document), ITag
     {
         internal new TagDocument Document => (TagDocument)base.Document;
     }

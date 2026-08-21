@@ -7,41 +7,23 @@ namespace TagTag.Backend
     public interface IView
     {
         IEntityManager eman { set; }
-        IMenu menu { get; }
         ITagMenu tagger { get; }
         void SetDetailItems(IEnumerable<IEntity> items);
     }
-    public interface IMenu
+    public interface ITagMenu
     {
-        event Action MenuBack;
-        void SetMenuItems(IEnumerable<IMenuItem> items);
-        void SetTree(IEnumerable<String> tree);
+        IEntity tagging { get; }
+        void SetItems(IEnumerable<IMenuItem<ITag>> items);
     }
-    public interface ITagMenu : IMenu
+    public interface IMenuItem<T> where T : IEntity
     {
-        event Action<IEntity> tagging;
-    }
-    public interface IMenuItem
-    {
-        bool ticked { get; set; }
-        IEntity entity { get; }
-        void Activate();
+        bool selected { get; set; }
+        T entity { get; }
     }
 
-    internal interface IDetailPresentationStrategy
-    {
-        IEnumerable<IEntity> GetEntities(IEntity selected, IEnumerable<IEntity> all);
-    }
-    internal interface IMenuPresentationStrategy
-    {
-        IEnumerable<IMenuItem> GetItems(ITag root, IEnumerable<IEntity> models, IEntityHooks hooks);
-    }
     internal interface IEntityHooks
     {
-        ITag head { get; }
-        Action<IEntity> activated { get; }
-        Action<IEntity, bool> ticked { get; }
-        Func<IEntity, bool> isticked { get; }
+        IEnumerable<ITag> filter { get; }
     }
     internal interface IModel
     {
