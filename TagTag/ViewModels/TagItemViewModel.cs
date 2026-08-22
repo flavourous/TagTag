@@ -7,7 +7,7 @@ using TagTag.Backend;
 
 namespace TagTag.ViewModels;
 
-public sealed partial class TagItemViewModel(IEntityItem<ITag> tagItem, IEntityRepository man) : ReactiveObject
+public sealed partial class TagItemViewModel(string Ghost, IEntityItem<ITag> tagItem, IEntityRepository man) : ReactiveObject
 {
     public ITag Tag { get; } = tagItem.entity;
     public EntityObservableViewModel<bool?> Selected { get; } = new(tagItem.selected);
@@ -15,6 +15,7 @@ public sealed partial class TagItemViewModel(IEntityItem<ITag> tagItem, IEntityR
     public EntityObservableViewModel<bool?> Tagged { get; } = new(tagItem.tagged);
 
     public string Name { get; set; } = string.IsNullOrWhiteSpace(tagItem.entity.name) ? "<empty>" : tagItem.entity.name;
+    public string Ghost { get; } = Ghost;
 
     [Reactive] public bool _isEditing;
     [ReactiveCommand] public void BeginEditName() => IsEditing = true;

@@ -1,19 +1,68 @@
 using System.Collections.ObjectModel;
+using AvaloniaGraphControl;
 using DynamicData;
+using Microsoft.Msagl.Layout.Layered;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;
 using TagTag.Backend;
 
 namespace TagTag.ViewModels;
 
+public class RootCloudViewModel() {}
+public class EdgeCloudViewModel : Edge
+{
+    public bool Root {get;}
+    public EdgeCloudViewModel(bool root, object tail, object head, object label = null, Symbol tailSymbol = Symbol.None, Symbol headSymbol = Symbol.Arrow) : base(tail, head, label, tailSymbol, headSymbol)
+    {
+        Root = root;
+    }
+}
 public sealed partial class TagCloudViewModel : ReactiveObject, ITagMenu
 {
     public IEntityRepository? Eman { get; set; }
 
-    [Reactive] private ObservableCollection<TagItemViewModel> _items = [];
+    [Reactive] private Graph _graph;
     public IEntity tagging { get; set; }
     public void SetItems(IEnumerable<IEntityItem<ITag>> items)
     {
-        Items = [.. items.Select(x => new TagItemViewModel(x, Eman))];
+        var g = new Graph();
+        var longestName = items.Select(x=>x.entity.name).MaxBy(x=>x.Length);
+        var nodes = items.Select(x => new TagItemViewModel(longestName, x, Eman)).ToDictionary(x=>x.Tag);
+        var parents = nodes.Values
+            .SelectMany(x=>x.Tag.tags.Select(t=>(parent: nodes[t], child:x)))
+            .ToLookup(x=>x.child)
+            .ToDictionary(x=>x.Key, x=>x.Select(g=>g.parent).ToArray());
+        var root = new RootCloudViewModel();
+        
+        foreach(var node in nodes.Values)
+        {
+            if(!parents.TryGetValue(node, out var p) || !p.Any())
+                g.Edges.Add(new EdgeCloudViewModel(true, root, node));
+
+            foreach(var edge in node.Tag.tags)
+                g.Edges.Add(new EdgeCloudViewModel(false, nodes[edge], node));
+        }
+
+        Dictionary<object, int> ranks = [];
+        ranks[root] = 0;
+        foreach(var node in nodes.Values)
+        {
+            TagItemViewModel[] nextParents = [node];
+            int rank = 1;
+            do
+            {
+                var allNextParents = nextParents.Select(x=>parents.TryGetValue(x, out var v) ? v : []).ToArray();
+                if(allNextParents.Any(x=>!x.Any())) break;
+                nextParents = allNextParents.SelectMany(x=>x).ToArray();
+                rank++;
+            } while(nextParents.Any());
+
+            ranks[node] = rank;
+        }
+
+        g.Orientation = Graph.Orientations.Horizontal;
+        g.HorizontalOrder = (a,b) => ranks[a] - ranks[b];
+
+        Graph = g;
     }
 }
