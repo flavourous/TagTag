@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:TagTag.ViewModels"
+             xmlns:c="using:Avalonia.Data.Converters"
              x:Class="TagTag.Views.MainView"
              x:DataType="vm:MainViewModel"
              x:Name="uc">
@@ -14,6 +15,18 @@
       <Setter Property="Padding" Value="3,0"/>
       <Setter Property="MinHeight" Value="0"/>
     </Style>
+    <Style Selector="CheckBox">
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Height="18" Width="18" Background="Transparent">
+            <Panel>
+              <Border IsVisible="{TemplateBinding IsChecked}" Background="{TemplateBinding Background}"/>
+              <TextBlock Text="{TemplateBinding Content}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            </Panel>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
   </UserControl.Styles>
   <Grid RowDefinitions="auto,*,auto,*" RowSpacing="7" Margin="7">
     <TextBlock Text="Tagcloud" FontSize="20" FontWeight="ExtraLight" Margin="27,0,0,0"/>
@@ -22,12 +35,14 @@
     <ItemsControl ItemsSource="{Binding TagCloud.Items}">
       <ItemsControl.ItemTemplate>
         <DataTemplate>
-          <Grid ColumnDefinitions="auto,auto,*,auto" ColumnSpacing="7">
+          <Grid ColumnDefinitions="auto,*,auto,auto,auto" ColumnSpacing="7">
             <Button Command="{Binding BeginEditNameCommand}" Content="🖊️"/>
-            <CheckBox IsChecked="{Binding Selected, Mode=TwoWay}" Grid.Column="1" Padding="0" VerticalAlignment="Center"/>
-            <TextBlock IsVisible="{Binding !IsEditing}" Text="{Binding Name}" Grid.Column="2" VerticalAlignment="Center" Margin="0,0,0,1" />
-            <TextBox KeyDown="TextBox_KeyDown" IsVisible="{Binding IsEditing}" PropertyChanged="TextBox_PropertyChanged" Text="{Binding Name}" Grid.Column="2" VerticalAlignment="Center" Margin="-4,0,0,1" />
-            <Button Grid.Column="3" Content="🗑" FontSize="20" Command="{Binding #uc.DataContext.DeleteEntityCommand}" CommandParameter="{Binding entity}"/>
+            <TextBlock IsVisible="{Binding !IsEditing}" Text="{Binding Name}" Grid.Column="1" VerticalAlignment="Center" Margin="0,0,0,1" />
+            <TextBox KeyDown="TextBox_KeyDown" IsVisible="{Binding IsEditing}" PropertyChanged="TextBox_PropertyChanged" Text="{Binding Name}" Grid.Column="1" VerticalAlignment="Center" Margin="-4,0,0,1" />
+            <CheckBox Content="☵" Grid.Column="2" Background="DodgerBlue" IsVisible="{Binding Selected.Enabled}" IsChecked="{Binding Selected.Value, Mode=TwoWay}" Padding="0" VerticalAlignment="Center"/>
+            <CheckBox Content="🔖" Grid.Column="3" Background="SeaGreen" IsVisible="{Binding Tagged.Enabled}" IsChecked="{Binding Tagged.Value, Mode=TwoWay}" Padding="0" VerticalAlignment="Center"/>
+            <CheckBox Content="🔖" Grid.Column="3" Background="DarkOrange" IsVisible="{Binding Tagging.Enabled}" IsChecked="{Binding Tagging.Value, Mode=TwoWay}" Padding="0" VerticalAlignment="Center"/>
+            <Button Grid.Column="4" Content="🗑" FontSize="20" Command="{Binding #uc.DataContext.DeleteEntityCommand}" CommandParameter="{Binding Tag}"/>
           </Grid>
         </DataTemplate>
       </ItemsControl.ItemTemplate>
@@ -40,16 +55,18 @@
     <ItemsControl ItemsSource="{Binding DetailItems}">
       <ItemsControl.ItemTemplate>
         <DataTemplate>
-            <Grid ColumnDefinitions="auto,*,auto,auto" RowDefinitions="auto,auto" ColumnSpacing="7" RowSpacing="5">
+            <Grid ColumnDefinitions="auto,*,auto,auto,auto" RowDefinitions="auto,auto" ColumnSpacing="7" RowSpacing="5">
               <Button Command="{Binding BeginEditNameCommand}" Content="🖊️"/>
               <TextBlock IsVisible="{Binding !IsEditing}" Text="{Binding Name}" FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="0,0,0,2"/>
               <TextBox PropertyChanged="TextBox_PropertyChanged" KeyDown="TextBox_KeyDown" IsVisible="{Binding IsEditing}" Text="{Binding Name}" FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="-4,0,0,2"/>
               <TextBlock Grid.Column="2" Text="{Binding Date}" Foreground="Gray" VerticalAlignment="Center" />
-              <Button Content="🗑" FontSize="20" Grid.Column="3" VerticalAlignment="Top" Command="{Binding #uc.DataContext.DeleteEntityCommand}" CommandParameter="{Binding Entity}"/>
+              <CheckBox Content="🔖" Background="Orange" Grid.Column="3" IsEnabled="{Binding Tagging.Enabled}" IsChecked="{Binding Tagging.Value, Mode=TwoWay}" Padding="0" VerticalAlignment="Center"/>
+              <Border Grid.Column="3" IsVisible="{Binding !Tagging.Enabled}" Background="#55ffffff"/>
+              <Button Content="🗑" FontSize="20" Grid.Column="4" VerticalAlignment="Top" Command="{Binding #uc.DataContext.DeleteEntityCommand}" CommandParameter="{Binding Entity}"/>
               <Button IsVisible="{Binding !IsEditingDetail}" Command="{Binding BeginEditDetailCommand}" Content="🖊️" Grid.Row="1" VerticalAlignment="Top"/>
               <Button IsVisible="{Binding IsEditingDetail}" Command="{Binding SaveCommand}" Content="💾" Grid.Row="1" VerticalAlignment="Top"/>
               <TextBlock MaxHeight="200" IsVisible="{Binding !IsEditingDetail}" FontWeight="Light" Margin="0,2,0,0" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Text}" TextWrapping="Wrap" MinHeight="10" TextTrimming="CharacterEllipsis"/>
-              <TextBox PropertyChanged="TextBox_PropertyChanged" MaxHeight="200" IsVisible="{Binding IsEditingDetail}" FontWeight="Light" Margin="-4,1,0,0" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Text}" TextWrapping="Wrap" MinHeight="10" AcceptsReturn="True" AcceptsTab="True"/>
+              <TextBox PropertyChanged="TextBox_PropertyChanged" MaxHeight="200" IsVisible="{Binding IsEditingDetail}" FontWeight="Light" Margin="-4,1,0,0" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="4" Text="{Binding Text}" TextWrapping="Wrap" MinHeight="10" AcceptsReturn="True" AcceptsTab="True"/>
             </Grid>
         </DataTemplate>
       </ItemsControl.ItemTemplate>

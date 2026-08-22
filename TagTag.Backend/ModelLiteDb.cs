@@ -19,7 +19,7 @@ internal sealed class NoteDocument : EntityDocument
 
 internal sealed class TagDocument : EntityDocument;
 
-public sealed class ModelLiteDb : IModel, IEntityManager, IDisposable
+public sealed class ModelLiteDb : IEntityRepository, IDisposable
 {
     private const string NotesCollection = "notes";
     private const string TagsCollection = "tags";
@@ -37,8 +37,6 @@ public sealed class ModelLiteDb : IModel, IEntityManager, IDisposable
         notes.EnsureIndex(note => note.TagIds);
         tags.EnsureIndex(tag => tag.TagIds);
     }
-
-    public IEntityManager eman => this;
 
     public void AddTag(IEntity entity, ITag tag) => UpdateTagMembership(entity, tag, add: true);
 

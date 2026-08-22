@@ -36,20 +36,20 @@ public sealed class PresenterTests : IDisposable
 
         note2.name = "Totally - lol";
         note2.text = "HAH";
-        view.Eman.UpdateEntity(note2);
+        model.UpdateEntity(note2);
         Assert.Single(view.Menu.Items, item => item.entity.name == "Totally - lol");
 
-        view.Eman.DeleteEntity(note2);
+        model.DeleteEntity(note2);
         AssertMenuAndDetail(view, menuCount: 3, detailCount: 1);
 
-        Create<INote>(view.Eman, "LOLZOR");
-        Create<INote>(view.Eman, "LOLZOR");
-        Create<INote>(view.Eman, "LOLZOR");
+        Create<INote>(model, "LOLZOR");
+        Create<INote>(model, "LOLZOR");
+        Create<INote>(model, "LOLZOR");
         AssertMenuAndDetail(view, menuCount: 6, detailCount: 4);
 
         ToggleSelect(view.Menu, "tag 1");
         const string tagBasedNoteName = "Testing that we get the tag based on menu position";
-        Create<INote>(view.Eman, tagBasedNoteName);
+        Create<INote>(model, tagBasedNoteName);
         Assert.Single(view.Menu.Items, item => item.entity.name == tagBasedNoteName);
 
         view.Tagger.BeginTagging(note1);
@@ -70,17 +70,17 @@ public sealed class PresenterTests : IDisposable
         ToggleSelect(view.Tagger, "tag 1");
         Assert.Single(view.Tagger.Items);
         const string nestedTagName = "Testing tag";
-        Create<ITag>(view.Eman, nestedTagName);
+        Create<ITag>(model, nestedTagName);
         Assert.Single(view.Tagger.Items, item => item.entity.name == nestedTagName);
 
         view.Menu.GoBack();
         while (view.Menu.Items.Count > 0)
         {
-            view.Eman.DeleteEntity(view.Menu.Items[0].entity);
+            model.DeleteEntity(view.Menu.Items[0].entity);
         }
 
         Assert.Empty(view.Menu.Items);
-        Create<ITag>(view.Eman, "Root Tag");
+        Create<ITag>(model, "Root Tag");
         Assert.Single(view.Menu.Items);
     }
 
@@ -92,10 +92,10 @@ public sealed class PresenterTests : IDisposable
 
         using (var model = new ModelLiteDb(platform))
         {
-            var tag = Create<ITag>(model.eman, "Work");
-            var note = Create<INote>(model.eman, "Plan", tag);
+            var tag = Create<ITag>(model, "Work");
+            var note = Create<INote>(model, "Plan", tag);
             note.text = "Prepare the LiteDB migration.";
-            model.eman.UpdateEntity(note);
+            model.UpdateEntity(note);
         }
 
         using var reopenedModel = new ModelLiteDb(platform);
@@ -111,37 +111,37 @@ public sealed class PresenterTests : IDisposable
         if (Directory.Exists(databaseDirectory)) Directory.Delete(databaseDirectory, recursive: true);
     }
 
-    private static void CreateSampleModel(IModel model)
+    private static void CreateSampleModel(IEntityRepository model)
     {
-        var tag1 = Create<ITag>(model.eman, "tag 1");
-        var tag2 = Create<ITag>(model.eman, "tag 2");
-        var tag3 = Create<ITag>(model.eman, "tag 3", tag1);
+        var tag1 = Create<ITag>(model, "tag 1");
+        var tag2 = Create<ITag>(model, "tag 2");
+        var tag3 = Create<ITag>(model, "tag 3", tag1);
 
-        Create<INote>(model.eman, "note 1");
-        Create<INote>(model.eman, "note 2");
-        Create<INote>(model.eman, "note 3", tag1);
-        Create<INote>(model.eman, "note 4", tag2);
-        Create<INote>(model.eman, "note 5", tag3);
-        Create<INote>(model.eman, "note 6", tag1, tag2);
+        Create<INote>(model, "note 1");
+        Create<INote>(model, "note 2");
+        Create<INote>(model, "note 3", tag1);
+        Create<INote>(model, "note 4", tag2);
+        Create<INote>(model, "note 5", tag3);
+        Create<INote>(model, "note 6", tag1, tag2);
     }
 
-    private static T Create<T>(IEntityManager entityManager, string name, params ITag[] tags) where T : IEntity
+    private static T Create<T>(IEntityRepository entityManager, string name, params ITag[] tags) where T : IEntity
     {
         var entity = entityManager.CreateEntity<T>();
         entity.name = name;
         foreach (var tag in tags)
         {
-            ((IModel)entityManager).AddTag(entity, tag);
+            entityManager.AddTag(entity, tag);
             entityManager.UpdateEntity(tag);
         }
 
         return (T)entityManager.UpdateEntity(entity);
     }
 
-    private static T Find<T>(IModel model, string name) where T : class, IEntity =>
+    private static T Find<T>(IEntityRepository model, string name) where T : class, IEntity =>
         Assert.IsAssignableFrom<T>(Assert.Single(model.GetEntities(), entity => entity.name == name));
 
-    private static IMenuItem<ITag> Find(ManualMenu menu, ITag tag) =>
+    private static IEntityItem<ITag> Find(ManualMenu menu, ITag tag) =>
         Assert.Single(menu.Items, item => item.entity.Equals(tag));
 
     private static void ToggleSelect(ManualMenu menu, string name) 
@@ -158,24 +158,24 @@ public sealed class PresenterTests : IDisposable
 
     private sealed class ManualView : IView
     {
-        public IEntityManager Eman { get; private set; } = null!;
+        public IEntityRepository Eman { get; private set; } = null!;
         public ManualMenu Menu { get; } = new();
         public ManualMenu Tagger { get; } = new();
         public IReadOnlyList<IEntity> Detail { get; private set; } = [];
 
-        IEntityManager IView.eman { set => Eman = value; }
-        ITagMenu IView.tagger => Tagger;
+        IEntityRepository IView.entities { set => Eman = value; }
+        ITagMenu IView.cloud => Tagger;
         public void SetDetailItems(IEnumerable<IEntity> items) => Detail = items.ToArray();
     }
 
     private sealed class ManualMenu : ITagMenu
     {
-        public IReadOnlyList<IMenuItem<ITag>> Items { get; private set; } = [];
+        public IReadOnlyList<IEntityItem<ITag>> Items { get; private set; } = [];
 
         public event Action? MenuBack;
         public IEntity? tagging {get;set;}
 
-        public void SetItems(IEnumerable<IMenuItem<ITag>> items) => Items = items.ToArray();
+        public void SetItems(IEnumerable<IEntityItem<ITag>> items) => Items = items.ToArray();
         public void SetTree(IEnumerable<string> tree) { }
         public void GoBack() => MenuBack?.Invoke();
         public void BeginTagging(IEntity entity) => tagging = entity;

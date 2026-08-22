@@ -6,13 +6,8 @@ using System.Threading.Tasks;
 
 namespace TagTag.Backend
 {
-    class MockEM : IEntityManager
+    class MockEM : IEntityRepository
     {
-        readonly Func<List<IEntity>> gl;
-        public MockEM(Func<List<IEntity>> gl)
-        {
-            this.gl = gl;
-        }
         Dictionary<Type, Func<EntBase>> creators = new Dictionary<Type, Func<EntBase>>
         {
             { typeof(INote), () => new MockNote() },
@@ -29,7 +24,7 @@ namespace TagTag.Backend
         public event Action<IEntity> deleted;
         public void DeleteEntity(IEntity e)
         {
-            gl().Remove(e);
+            entities.Remove(e);
             deleted?.Invoke(e);
         }
         public event Action<IEntity> updated;
@@ -39,10 +34,24 @@ namespace TagTag.Backend
             if (!eb.IsCommitted)
             {
                 eb.IsCommitted = true;
-                gl().Add(e);
+                entities.Add(e);
             }
             updated?.Invoke(e);
             return e;
+        }
+        List<IEntity> entities = new List<IEntity>();
+        
+        public IEnumerable<IEntity> GetEntities() { return entities; }
+
+        public void AddTag(IEntity e, ITag t)
+        {
+            if (e == t) return;
+            (e as EntBase).Tags.Add(t);
+        }
+
+        public void RemoveTag(IEntity e, ITag t)
+        {
+            (e as EntBase).Tags.Remove(t);
         }
     }
     static class Psh
@@ -68,24 +77,5 @@ namespace TagTag.Backend
     class MockTag : EntBase, ITag
     {
 
-    }
-    class MockModel : IModel
-    {
-        public readonly MockEM mem;
-        public MockModel() { mem = new MockEM(() => entities); }
-        public IEntityManager eman { get { return mem; } }
-        List<IEntity> entities = new List<IEntity>();
-        public IEnumerable<IEntity> GetEntities() { return entities; }
-
-        public void AddTag(IEntity e, ITag t)
-        {
-            if (e == t) return;
-            (e as EntBase).Tags.Add(t);
-        }
-
-        public void RemoveTag(IEntity e, ITag t)
-        {
-            (e as EntBase).Tags.Remove(t);
-        }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,39 +16,47 @@ namespace TagTag.Backend
             Start(initiator, platform, new ModelLiteDb(platform));
         }
 
-        internal static void Start(IView initiator, IPlatform platform, IModel model)
+        internal static void Start(IView initiator, IPlatform platform, IEntityRepository repo)
         {
-            var presenter = new PresenterImpl(model, initiator, platform);
+            var presenter = new PresenterImpl(repo, initiator, platform);
             presenter.Present();
         }
 
-        class PresenterImpl(IModel model, IView view, IPlatform platform)
+        class PresenterImpl(IEntityRepository repo, IView view, IPlatform platform)
         {
             // Run presentation.
             TagCloudPresenter tagMenu;
+            TaggingPresenter taggingPresenter;
             public void Present()
             {
-                tagMenu = new TagCloudPresenter(view.tagger, model, Refresh);
-                view.eman = new EManProxy(model, tagMenu, DataRefresh);
-                DataRefresh();
+                taggingPresenter = new TaggingPresenter(repo, () => Refresh(false));
+                tagMenu = new TagCloudPresenter(view.cloud, repo, taggingPresenter, () => Refresh(true));
+                view.entities = new EManProxy(repo, tagMenu, () => Refresh(false));
+                Refresh(false);
             }
 
-            private void DataRefresh()
+            private void Refresh(bool tagFilterOnly)
             {
-                Refresh();
-                tagMenu.Refresh();
-            }
-
-            private void Refresh()
-            {
+                if(!tagFilterOnly)
+                {
+                    // entity data change, could be delete
+                    taggingPresenter.Clear();
+                    tagMenu.Refresh();
+                }
+                
                 bool Match(IEntity e) => tagMenu.filter.Any() switch
                 {
                     true => tagMenu.filter.All(e.tags.Contains),
                     false => !e.tags.Any()
                 };
 
-                var entities = model.GetEntities().Where(x => x is not ITag && Match(x));
-                view.SetDetailItems(entities);
+                var entities = repo.GetEntities().Where(x => x is not ITag && Match(x));
+                view.SetDetailItems(entities.Select(x => new EntityItem<IEntity>(x)
+                {
+                    selected = new Observable<bool?>(null, delegate { }),
+                    tagging = taggingPresenter.Tagging(x),
+                    tagged = new Observable<bool?>(null, delegate { })
+                }));
             }
         }
     }

@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -6,38 +5,39 @@ namespace TagTag.Backend
 {
     public interface IView
     {
-        IEntityManager eman { set; }
-        ITagMenu tagger { get; }
-        void SetDetailItems(IEnumerable<IEntity> items);
+        IEntityRepository entities { set; }
+        ITagMenu cloud { get; }
+        void SetDetailItems(IEnumerable<IEntityItem<IEntity>> items);
     }
+
     public interface ITagMenu
     {
-        IEntity tagging { get; }
-        void SetItems(IEnumerable<IMenuItem<ITag>> items);
+        void SetItems(IEnumerable<IEntityItem<ITag>> items);
     }
-    public interface IMenuItem<T> where T : IEntity
+
+    public interface IEntityItem<T> where T : IEntity
     {
-        bool selected { get; set; }
+        IObservable<bool?> selected { get; }
+        IObservable<bool?> tagging { get; }
+        IObservable<bool?> tagged { get; }
         T entity { get; }
     }
 
-    internal interface IEntityHooks
+    // not System.IObservable to try to keep architecture "pure simple c#" just for fun
+    public interface IObservable<T>
     {
-        IEnumerable<ITag> filter { get; }
-    }
-    internal interface IModel
-    {
-        IEnumerable<IEntity> GetEntities();
-        IEntityManager eman { get; }
-        void AddTag(IEntity entity, ITag tag);
-        void RemoveTag(IEntity entity, ITag tag);
+        public T Value { get; set; }
+        public Action<T> Observe { set; }
     }
 
-    public interface IEntityManager
+    public interface IEntityRepository
     {
+        IEnumerable<IEntity> GetEntities();
         T CreateEntity<T>() where T : IEntity;
         void DeleteEntity(IEntity d);
         IEntity UpdateEntity(IEntity e);
+        void AddTag(IEntity entity, ITag tag);
+        void RemoveTag(IEntity entity, ITag tag);
     }
 
     // I was tempted by an ES approach, but decided a normal ORM modelling 
