@@ -26,8 +26,7 @@ public sealed partial class TagCloudViewModel : ReactiveObject, ITagMenu
     public void SetItems(IEnumerable<IEntityItem<ITag>> items)
     {
         var g = new Graph();
-        var longestName = items.Select(x=>x.entity.name).MaxBy(x=>x.Length);
-        var nodes = items.Select(x => new TagItemViewModel(longestName, x, Eman)).ToDictionary(x=>x.Tag);
+        var nodes = items.Select(x => new TagItemViewModel(x, Eman)).ToDictionary(x=>x.Tag);
         var parents = nodes.Values
             .SelectMany(x=>x.Tag.tags.Select(t=>(parent: nodes[t], child:x)))
             .ToLookup(x=>x.child)
@@ -43,25 +42,7 @@ public sealed partial class TagCloudViewModel : ReactiveObject, ITagMenu
                 g.Edges.Add(new EdgeCloudViewModel(false, nodes[edge], node));
         }
 
-        Dictionary<object, int> ranks = [];
-        ranks[root] = 0;
-        foreach(var node in nodes.Values)
-        {
-            TagItemViewModel[] nextParents = [node];
-            int rank = 1;
-            do
-            {
-                var allNextParents = nextParents.Select(x=>parents.TryGetValue(x, out var v) ? v : []).ToArray();
-                if(allNextParents.Any(x=>!x.Any())) break;
-                nextParents = allNextParents.SelectMany(x=>x).ToArray();
-                rank++;
-            } while(nextParents.Any());
-
-            ranks[node] = rank;
-        }
-
         g.Orientation = Graph.Orientations.Horizontal;
-        g.HorizontalOrder = (a,b) => ranks[a] - ranks[b];
 
         Graph = g;
     }
