@@ -12,6 +12,8 @@ namespace TagTag.Views.Components;
 public class CloudEdge : Connection
 {
     private static readonly Func<AvaloniaGraphControl.Edge, Microsoft.Msagl.Drawing.Edge> MsAglEdgeGetter;
+    private static readonly SolidColorBrush Wb;
+
     static CloudEdge()
     {
         var prop = typeof(AvaloniaGraphControl.Edge).GetProperty("DEdge", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -20,6 +22,7 @@ public class CloudEdge : Connection
             typeof(Func<AvaloniaGraphControl.Edge, Microsoft.Msagl.Drawing.Edge>), 
             getter
         );
+        Wb = new SolidColorBrush(new Avalonia.Media.Color(50, 200,200,200));
     }
 
     private Microsoft.Msagl.Drawing.Edge MsAglEdge => MsAglEdgeGetter(DataContext as AvaloniaGraphControl.Edge);
@@ -38,14 +41,14 @@ public class CloudEdge : Connection
         if (obj.HeadSymbol == AvaloniaGraphControl.Edge.Symbol.Arrow)
         {
             arrowStart = a2a.Convert(dEdge.ArrowAtTargetPosition);
-            Drawings.Add(FigureToDrawing(CreateArrowHeadFigure(dEdge.EdgeCurve.End, dEdge.ArrowAtTargetPosition, a2a), Brushes.White, Brushes.Transparent));
+            Drawings.Add(FigureToDrawing(CreateArrowHeadFigure(dEdge.EdgeCurve.End, dEdge.ArrowAtTargetPosition, a2a), Wb, Brushes.Transparent));
         }
         if (obj.TailSymbol == AvaloniaGraphControl.Edge.Symbol.Arrow)
         {
             arrowStart = a2a.Convert(dEdge.ArrowAtSourcePosition);
-            Drawings.Add(FigureToDrawing(CreateArrowHeadFigure(dEdge.EdgeCurve.Start, dEdge.ArrowAtSourcePosition, a2a), Brushes.White, Brushes.Transparent));
+            Drawings.Add(FigureToDrawing(CreateArrowHeadFigure(dEdge.EdgeCurve.Start, dEdge.ArrowAtSourcePosition, a2a), Wb, Brushes.Transparent));
         }
-        Drawings.Add(FigureToDrawing(CreateEdgePathFigure(dEdge, a2a, arrowStart), Brushes.White, Brushes.Transparent));
+        Drawings.Add(FigureToDrawing(CreateEdgePathFigure(dEdge, a2a, arrowStart), Wb, Brushes.Transparent));
 
         return AglToAvalonia.Convert(boundingBox.Size);
     }
