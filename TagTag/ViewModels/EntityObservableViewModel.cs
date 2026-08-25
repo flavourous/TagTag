@@ -21,5 +21,16 @@ public class EntityObservableViewModel<T> : ReactiveObject
     }
 
     public bool Enabled => Observable.Value is not null;
-    public T Value { get => Observable.Value; set => Observable.Value = value; }
+    public T Value 
+    {
+        get => Observable.Value;
+        set
+        {
+            this.RaisePropertyChanging(nameof(Enabled));
+            this.RaisePropertyChanging(nameof(Value));
+            Observable.Value = value; 
+            this.RaisePropertyChanged(nameof(Enabled));
+            this.RaisePropertyChanged(nameof(Value));
+        }
+    }
 }

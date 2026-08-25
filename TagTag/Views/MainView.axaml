@@ -1,7 +1,8 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:TagTag.ViewModels"
-             xmlns:agc="clr-namespace:AvaloniaGraphControl;assembly=AvaloniaGraphControl"
+             xmlns:rx="using:ReactiveUI.Avalonia"
+             xmlns:l="using:TagTag"
              x:Class="TagTag.Views.MainView"
              x:DataType="vm:MainViewModel"
              x:Name="uc">
@@ -15,72 +16,119 @@
       <Setter Property="Padding" Value="3,0"/>
       <Setter Property="MinHeight" Value="0"/>
     </Style>
-    <Style Selector="CheckBox">
-      <Setter Property="Template">
-        <ControlTemplate>
-          <Border Height="18" Width="18" Background="Transparent">
-            <Panel>
-              <Border IsVisible="{TemplateBinding IsChecked}" Background="{TemplateBinding Background}"/>
-              <TextBlock Text="{TemplateBinding Content}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-            </Panel>
-          </Border>
-        </ControlTemplate>
+    <Style Selector="TextBlock.ab">
+      <Setter Property="FontSize" Value="18"/>
+      <Setter Property="FontWeight" Value="300"/>
+      <Setter Property="Foreground" Value="#787878"/>
+    </Style>
+    <Style Selector="TextBlock.ib">
+      <Setter Property="FontSize" Value="18"/>
+      <Setter Property="Foreground" Value="#787878"/>
+      <Setter Property="Margin" Value="9,0,0,0"/>
+    </Style>
+    <Style Selector="Separator">
+      <Setter Property="Height" Value="12"/>
+      <Setter Property="Background">
+        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+          <LinearGradientBrush.GradientStops>
+            <GradientStop Color="#00232c3b"  Offset="0.4"/>
+            <GradientStop Color="#232c3b"  Offset="0.5"/>
+            <GradientStop Color="#00232c3b"  Offset="0.6"/>
+          </LinearGradientBrush.GradientStops>
+        </LinearGradientBrush>
       </Setter>
     </Style>
   </UserControl.Styles>
-  <Grid RowDefinitions="auto,auto,auto,*" RowSpacing="7" Margin="7">
-    <TextBlock Text="Tagcloud" FontSize="20" FontWeight="ExtraLight" Margin="27,0,0,0"/>
-    <Button HorizontalAlignment="Right" Content="＋" Command="{Binding NewTagCommand}" Margin="0,0,1,0"/>
-    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" >
-    <agc:GraphPanel Graph="{Binding TagCloud.Graph}"  LayoutMethod="SugiyamaScheme" Margin="-32,0,0,0" HorizontalAlignment="Left">
-      <agc:GraphPanel.DataTemplates>
-        <DataTemplate x:DataType="vm:EdgeCloudViewModel">
-          <agc:Connection Brush="White" IsVisible="{Binding !Root}" />
-        </DataTemplate>
-        <DataTemplate x:DataType="vm:RootCloudViewModel">
-          <Panel/>
-        </DataTemplate>
-        <DataTemplate x:DataType="vm:TagItemViewModel">
-          <Border BorderBrush="White" BorderThickness="1" CornerRadius="7" Padding="5">
-            <Grid ColumnDefinitions="*,21,21,21,21,*" RowDefinitions="auto,auto" ColumnSpacing="7"  MinWidth="102">
-              <Panel Grid.ColumnSpan="6" HorizontalAlignment="Center">
-                <TextBlock IsVisible="{Binding !IsEditing}" Text="{Binding Name}" Margin="5,1" />
-                <TextBox KeyDown="TextBox_KeyDown" IsVisible="{Binding IsEditing}" PropertyChanged="TextBox_PropertyChanged" Text="{Binding Name}" Margin="-1,0" MinWidth="12" />
+  <rx:RoutedViewHost Grid.Row="0" Router="{Binding Router}">
+    <rx:RoutedViewHost.ViewLocator>
+      <l:ViewLocator/>
+    </rx:RoutedViewHost.ViewLocator>
+    <rx:RoutedViewHost.DefaultContent>
+      <Grid RowDefinitions="auto,*" Background="#0F1523">
+        <Border Grid.Row="0">
+          <Panel>
+            <Border Tapped="Execute_Tag_Command" Tag="{Binding ToggleParentsCommand}" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="7">
+              <Panel Margin="5,0">
+                <Panel IsVisible="{Binding !AtRoot}">
+                  <TextBlock Text="❮" Classes="ab" IsVisible="{Binding NavigateChildren}"/>
+                  <TextBlock Text="❯" Classes="ab" IsVisible="{Binding !NavigateChildren}"/>
+                </Panel>
+                <TextBlock Text="❮" Classes="ab" IsVisible="{Binding AtRoot}" Opacity="0.3"/>
               </Panel>
-              <Button Grid.Row="1" Command="{Binding BeginEditNameCommand}" Content="🖊️" Grid.Column="1"/>
-              <CheckBox Grid.Row="1" Content="☵" Grid.Column="2" Background="DodgerBlue" IsVisible="{Binding Selected.Enabled}" IsChecked="{Binding Selected.Value, Mode=TwoWay}" Padding="0" VerticalAlignment="Center"/>
-              <CheckBox Grid.Row="1" Content="🔖" Grid.Column="3" Background="SeaGreen" IsVisible="{Binding Tagged.Enabled}" IsChecked="{Binding Tagged.Value, Mode=TwoWay}" Padding="0" VerticalAlignment="Center"/>
-              <CheckBox Grid.Row="1" Content="🔖" Grid.Column="3" Background="DarkOrange" IsVisible="{Binding Tagging.Enabled}" IsChecked="{Binding Tagging.Value, Mode=TwoWay}" Padding="0" VerticalAlignment="Center"/>
-              <Button Grid.Row="1" Grid.Column="4" Content="🗑" FontSize="20" Command="{Binding #uc.DataContext.DeleteEntityCommand}" CommandParameter="{Binding Tag}"/>
-            </Grid>
-          </Border>
-        </DataTemplate>
-      </agc:GraphPanel.DataTemplates>
-    </agc:GraphPanel>
-    </ScrollViewer>
-
-    <TextBlock Grid.Row="2" Text="Entities" FontSize="18" FontWeight="ExtraLight"  Margin="27,0,0,0"/>
-    <Button Grid.Row="2" HorizontalAlignment="Right" Content="＋" Command="{Binding NewNoteCommand}" Margin="0,0,1,0"/>
-    <ScrollViewer Grid.Row="3">
-    <ItemsControl ItemsSource="{Binding DetailItems}">
-      <ItemsControl.ItemTemplate>
-        <DataTemplate>
-            <Grid ColumnDefinitions="auto,*,auto,auto,auto" RowDefinitions="auto,auto" ColumnSpacing="7" RowSpacing="5">
-              <Button Command="{Binding BeginEditNameCommand}" Content="🖊️"/>
-              <TextBlock IsVisible="{Binding !IsEditing}" Text="{Binding Name}" FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="0,0,0,2"/>
-              <TextBox PropertyChanged="TextBox_PropertyChanged" KeyDown="TextBox_KeyDown" IsVisible="{Binding IsEditing}" Text="{Binding Name}" FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="-4,0,0,2"/>
-              <TextBlock Grid.Column="2" Text="{Binding Date}" Foreground="Gray" VerticalAlignment="Center" />
-              <CheckBox Content="🔖" Background="Orange" Grid.Column="3" IsEnabled="{Binding Tagging.Enabled}" IsChecked="{Binding Tagging.Value, Mode=TwoWay}" Padding="0" VerticalAlignment="Center"/>
-              <Border Grid.Column="3" IsVisible="{Binding !Tagging.Enabled}" Background="#55ffffff"/>
-              <Button Content="🗑" FontSize="20" Grid.Column="4" VerticalAlignment="Top" Command="{Binding #uc.DataContext.DeleteEntityCommand}" CommandParameter="{Binding Entity}"/>
-              <Button IsVisible="{Binding !IsEditingDetail}" Command="{Binding BeginEditDetailCommand}" Content="🖊️" Grid.Row="1" VerticalAlignment="Top"/>
-              <Button IsVisible="{Binding IsEditingDetail}" Command="{Binding SaveCommand}" Content="💾" Grid.Row="1" VerticalAlignment="Top"/>
-              <TextBlock MaxHeight="200" IsVisible="{Binding !IsEditingDetail}" FontWeight="Light" Margin="0,2,0,0" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Text}" TextWrapping="Wrap" MinHeight="10" TextTrimming="CharacterEllipsis"/>
-              <TextBox PropertyChanged="TextBox_PropertyChanged" MaxHeight="200" IsVisible="{Binding IsEditingDetail}" FontWeight="Light" Margin="-4,1,0,0" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="4" Text="{Binding Text}" TextWrapping="Wrap" MinHeight="10" AcceptsReturn="True" AcceptsTab="True"/>
-            </Grid>
-        </DataTemplate>
-      </ItemsControl.ItemTemplate>
-    </ItemsControl>
-    </ScrollViewer>
-  </Grid>
+            </Border>
+            <Panel Height="28" ClipToBounds="True">
+              <Button Foreground="#aaaaaa" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="18" Content="☁" Padding="3" Command="{Binding Cloud}" Margin="0,0,7,0"/>
+              <Button Foreground="#aaaaaa" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="32" Content="+" FontWeight="300" Padding="3" Command="{Binding NewNoteCommand}" Margin="0,-12,40,0"/>
+            </Panel>
+            <TextBlock Text="Tagless" VerticalAlignment="Center" FontSize="18" FontWeight="500" HorizontalAlignment="Center" IsVisible="{Binding AtRoot}"/>
+            <ItemsControl ItemsSource="{Binding CurrentTags}" HorizontalAlignment="Center">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Orientation="Horizontal" VerticalAlignment="Center"/>
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="vm:NavBarViewModel">
+                  <Border Margin="3" Padding="5" Background="#001B2732" Tapped="Execute_Tag_Command" Tag="{Binding NavigateCommand}" CornerRadius="7">
+                    <Panel>
+                      <TextBlock Text="{Binding TagVM.Name}" VerticalAlignment="Center" FontSize="18" FontWeight="500"/>
+                      <Ellipse Width="3" Height="3" IsVisible="{Binding !IsFirst}" Fill="#787878" HorizontalAlignment="Left" Margin="-10,0,0,0"/>
+                    </Panel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </Panel>
+        </Border>
+        <ScrollViewer Grid.Row="1">
+          <StackPanel Margin="15,0">
+            <ItemsControl ItemsSource="{Binding ParentTags}" IsVisible="{Binding !NavigateChildren}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Tapped="Execute_Tag_Command" Tag="{Binding NavigateCommand}" Background="Transparent">
+                      <Grid ColumnDefinitions="auto,auto,*" ColumnSpacing="7" RowSpacing="5" Margin="0,7">
+                        <Separator IsVisible="{Binding !IsFirst}" Grid.ColumnSpan="3" VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="0,-14,0,0"/>
+                        <TextBlock Grid.Column="0" Text="❮" Classes="ab" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="🔖" Classes="ib" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="{Binding TagVM.Name, FallbackValue='home'}" VerticalAlignment="Center" Margin="0,0,0,2"/>
+                      </Grid>
+                    </Border>
+                </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <ItemsControl ItemsSource="{Binding NextTags}" IsVisible="{Binding NavigateChildren}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border Tapped="Execute_Tag_Command" Tag="{Binding NavigateCommand}"  Background="Transparent">
+                      <Grid ColumnDefinitions="auto,*,auto" ColumnSpacing="7" RowSpacing="5" Margin="0,7">
+                        <Separator IsVisible="{Binding !IsFirst}" Grid.ColumnSpan="3" VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="0,-14,0,0"/>
+                        <TextBlock Grid.Column="0" Text="🔖" Classes="ib" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding TagVM.Name}" VerticalAlignment="Center" Margin="0,0,0,2"/>
+                        <TextBlock Grid.Column="2" Text="❯" Classes="ab" Margin="0,0,9,0" VerticalAlignment="Center"/>
+                      </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <ItemsControl ItemsSource="{Binding DetailItems}" BorderBrush="#232c3b" BorderThickness="0,0,0,0">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Height="81"> 
+                      <Grid RowDefinitions="auto,*" ColumnDefinitions="auto,*,auto" ColumnSpacing="7" RowSpacing="5" Margin="9">
+                        <Separator IsVisible="{Binding !IsFirst}" Grid.ColumnSpan="3" VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="-9,-14,-9,0"/>
+                        <TextBlock Grid.Column="0" Text="🗎" Classes="ib" VerticalAlignment="Center" Margin="0"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" Margin="0,0,0,2"/>
+                        <TextBlock Grid.Row="0"  FontSize="12" Grid.Column="2" VerticalAlignment="Center" Text="{Binding Date}" Foreground="#787878" />
+                        <TextBlock Grid.ColumnSpan="3" MaxHeight="200" FontWeight="ExtraLight" Margin="0,2,0,0" Grid.Row="1" Text="{Binding Text}" />
+                        <TextBlock Grid.ColumnSpan="3" MaxHeight="200" FontWeight="ExtraLight" Margin="0,2,0,0" Grid.Row="1" Text="empty" Opacity="0.3" IsVisible="{Binding !HasText}" />
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+      </Grid>
+    </rx:RoutedViewHost.DefaultContent>
+  </rx:RoutedViewHost>  
 </UserControl>

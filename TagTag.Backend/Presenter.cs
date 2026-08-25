@@ -50,7 +50,7 @@ namespace TagTag.Backend
                     false => !e.tags.Any()
                 };
 
-                var entities = repo.GetEntities().Where(x => x is not ITag && Match(x));
+                var entities = repo.GetEntities().Where(Match).ToArray();
                 view.SetDetailItems(entities.Select(x => new EntityItem<IEntity>(x)
                 {
                     selected = new Observable<bool?>(null, delegate { }),

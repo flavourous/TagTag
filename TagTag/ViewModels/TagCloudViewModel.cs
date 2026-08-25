@@ -1,4 +1,9 @@
 using System.Collections.ObjectModel;
+using System.Reactive;
+using System.Reactive.Disposables;
+using System.Reactive.Disposables.Fluent;
+using System.Reactive.Linq;
+using Avalonia.Controls;
 using AvaloniaGraphControl;
 using DynamicData;
 using Microsoft.Msagl.Layout.Layered;
@@ -8,38 +13,51 @@ using TagTag.Backend;
 
 namespace TagTag.ViewModels;
 
-public class RootCloudViewModel() {}
-public class EdgeCloudViewModel : Edge
-{
-    public bool Root {get;}
-    public EdgeCloudViewModel(bool root, object tail, object head, object label = null, Symbol tailSymbol = Symbol.None, Symbol headSymbol = Symbol.Arrow) : base(tail, head, label, tailSymbol, headSymbol)
-    {
-        Root = root;
-    }
-}
-public sealed partial class TagCloudViewModel : ReactiveObject, ITagMenu
+public sealed partial class TagCloudViewModel(ISourceList<TagItemViewModel> Filter,
+    Dictionary<ITag, TagItemViewModel> NodeLookup, IScreen screen)
+    : ReactiveObject, ITagMenu, IRoutableViewModel
 {
     public IEntityRepository? Eman { get; set; }
 
+    private CompositeDisposable d = [];
+    public bool IsTagging { get; private set; }
+
+    public string? UrlPathSegment => throw new NotImplementedException();
+    public IScreen HostScreen => throw new NotImplementedException();
+
     [Reactive] private Graph _graph;
-    public IEntity tagging { get; set; }
     public void SetItems(IEnumerable<IEntityItem<ITag>> items)
     {
-        var g = new Graph();
-        var nodes = items.Select(x => new TagItemViewModel(x, Eman)).ToDictionary(x=>x.Tag);
-        var parents = nodes.Values
-            .SelectMany(x=>x.Tag.tags.Select(t=>(parent: nodes[t], child:x)))
-            .ToLookup(x=>x.child)
-            .ToDictionary(x=>x.Key, x=>x.Select(g=>g.parent).ToArray());
-        var root = new RootCloudViewModel();
-        
-        foreach(var node in nodes.Values)
-        {
-            if(!parents.TryGetValue(node, out var p) || !p.Any())
-                g.Edges.Add(new EdgeCloudViewModel(true, root, node));
+        d.Dispose();
+        d = [];
+        IsTagging = false;
+        Filter.Clear();
+        NodeLookup.Clear();
 
-            foreach(var edge in node.Tag.tags)
-                g.Edges.Add(new EdgeCloudViewModel(false, nodes[edge], node));
+        foreach(var item in items)
+        {
+            var vm = new TagItemViewModel(item, Eman);
+            NodeLookup[item.entity] = vm;
+        }
+
+        var root = new RootCloudViewModel();
+        var g = new Graph();
+        foreach (var (tag, node) in NodeLookup)
+        {
+            node.WhenAnyValue(x => x.Tagging.Value)
+                .WhereNotNull()
+                .Subscribe(v => IsTagging = v ?? IsTagging)
+                .DisposeWith(d);
+
+            Action add = () => Filter.Add(node), rm = () => Filter.Remove(node);
+            node.WhenAnyValue(x => x.Selected.Value)
+                .WhereNotNull()
+                .Subscribe(v => (v is true ? add : rm)())
+                .DisposeWith(d);
+
+            void AddEdge(EdgeCloudViewModel edge) => g.Edges.Add(edge);
+            if (!tag.tags.Any()) AddEdge(new(true, root, node));
+            foreach (var edge in tag.tags) AddEdge(new(false, NodeLookup[edge], node));
         }
 
         g.Orientation = Graph.Orientations.Horizontal;

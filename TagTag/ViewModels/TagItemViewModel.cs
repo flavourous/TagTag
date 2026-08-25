@@ -9,16 +9,14 @@ namespace TagTag.ViewModels;
 
 public sealed partial class TagItemViewModel(IEntityItem<ITag> tagItem, IEntityRepository man) : ReactiveObject
 {
-    public ITag Tag { get; } = tagItem.entity;
+    public ITag Tag => tagItem.entity;
     public EntityObservableViewModel<bool?> Selected { get; } = new(tagItem.selected);
     public EntityObservableViewModel<bool?> Tagging { get; } = new(tagItem.tagging);
     public EntityObservableViewModel<bool?> Tagged { get; } = new(tagItem.tagged);
-
-    public string Name { get; set; } = string.IsNullOrWhiteSpace(tagItem.entity.name) ? "<empty>" : tagItem.entity.name;
+    public string Name { get; } = string.IsNullOrWhiteSpace(tagItem.entity.name) ? "<empty>" : tagItem.entity.name;
 
     [Reactive] public bool _isEditing;
-    [ReactiveCommand] public void BeginEditName() => IsEditing = true;
-    public void Save()
+    [ReactiveCommand] public void Save()
     {
         IsEditing = false;
         tagItem.entity.name = Name;

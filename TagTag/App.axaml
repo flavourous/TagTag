@@ -1,5 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:v="using:TagTag.Views"
+             xmlns:vm="using:TagTag.ViewModels"
              x:Class="TagTag.App"
              RequestedThemeVariant="Default">
   <Application.Styles>

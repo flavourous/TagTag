@@ -15,7 +15,7 @@ namespace TagTag.Backend
         void SetItems(IEnumerable<IEntityItem<ITag>> items);
     }
 
-    public interface IEntityItem<T> where T : IEntity
+    public interface IEntityItem<out T> where T : IEntity
     {
         IObservable<bool?> selected { get; }
         IObservable<bool?> tagging { get; }
