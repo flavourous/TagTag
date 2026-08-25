@@ -13,7 +13,7 @@ public sealed partial class TagItemViewModel(IEntityItem<ITag> tagItem, IEntityR
     public EntityObservableViewModel<bool?> Selected { get; } = new(tagItem.selected);
     public EntityObservableViewModel<bool?> Tagging { get; } = new(tagItem.tagging);
     public EntityObservableViewModel<bool?> Tagged { get; } = new(tagItem.tagged);
-    public string Name { get; } = string.IsNullOrWhiteSpace(tagItem.entity.name) ? "<empty>" : tagItem.entity.name;
+    public string Name { get; set; } = tagItem.entity.name;
 
     [Reactive] public bool _isEditing;
     [ReactiveCommand] public void Save()

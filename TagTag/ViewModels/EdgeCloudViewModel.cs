@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
+using System.Reflection;
+using Avalonia.Controls;
 using AvaloniaGraphControl;
 using DynamicData;
 using Microsoft.Msagl.Layout.Layered;
@@ -14,7 +16,8 @@ namespace TagTag.ViewModels;
 public class EdgeCloudViewModel : Edge
 {
     public bool Root { get; }
-    public EdgeCloudViewModel(bool root, object tail, object head, object label = null, Symbol tailSymbol = Symbol.None, Symbol headSymbol = Symbol.Arrow) : base(tail, head, label, tailSymbol, headSymbol)
+    public EdgeCloudViewModel(bool root, object tail, object head, object label = null, Symbol tailSymbol = Symbol.None,
+        Symbol headSymbol = Symbol.Arrow) : base(tail, head, label, tailSymbol, headSymbol)
     {
         Root = root;
     }

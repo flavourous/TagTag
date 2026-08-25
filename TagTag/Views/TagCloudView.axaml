@@ -1,38 +1,52 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="using:TagTag.Views.Components"
              xmlns:vm="using:TagTag.ViewModels"
              xmlns:agc="clr-namespace:AvaloniaGraphControl;assembly=AvaloniaGraphControl"
              x:Class="TagTag.Views.TagCloudView"
              x:DataType="vm:TagCloudViewModel">
-    <Panel>
-        <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" >
-            <agc:GraphPanel Graph="{Binding Graph}"  LayoutMethod="SugiyamaScheme" Margin="-32,0,0,0" HorizontalAlignment="Left">
-                <agc:GraphPanel.DataTemplates>
-                    <DataTemplate x:DataType="vm:EdgeCloudViewModel">
-                        <agc:Connection Brush="White" IsVisible="{Binding !Root}" />
-                    </DataTemplate>
-                    <DataTemplate x:DataType="vm:RootCloudViewModel">
-                        <Panel/>
-                    </DataTemplate>
-                    <DataTemplate x:DataType="vm:TagItemViewModel">
-                        <Border Tapped="Cloud_Tapped" DoubleTapped="Cloud_DoubleTapped" Holding="Cloud_Holding" Background="Transparent" BorderBrush="White" BorderThickness="1" CornerRadius="5">
-                            <Panel Grid.ColumnSpan="6" HorizontalAlignment="Center">
-                                <Border CornerRadius="7" BorderBrush="#FF12D02E" BorderThickness="3" Margin="-4" IsVisible="{Binding Selected.Value, TargetNullValue={x:False}}"/>
-                                <Border CornerRadius="7" BorderBrush="#FF12D02E" BorderThickness="3" Margin="-4" IsVisible="{Binding Tagged.Value, TargetNullValue={x:False}}"/>
-                                <TextBlock IsVisible="{Binding !IsEditing}" Text="{Binding Name}" Margin="5,1" />
-                                <TextBox IsVisible="{Binding IsEditing}" Text="{Binding Name}" Margin="-1,0" MinWidth="12" />
-                                <Border Background="#ff5534" CornerRadius="12" IsVisible="{Binding IsEditing}" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,-12,-12,0">
-                                    <Button Content="🗑" FontSize="20" Command="{Binding #uc.DataContext.DeleteEntityCommand}" CommandParameter="{Binding Tag}"/>
-                                </Border>
-                                <Border Background="#0EBD1F" CornerRadius="12" IsVisible="{Binding IsEditing}" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="-12,-12,0,0">
-                                    <Button Content="💾" FontSize="20" Command="{Binding SaveCommand}"/>
-                                </Border>
-                            </Panel>
-                        </Border>
-                    </DataTemplate>
-                </agc:GraphPanel.DataTemplates>
-            </agc:GraphPanel>
-        </ScrollViewer>
-        <Button HorizontalAlignment="Right" Grid.Row="0" Content="＋" Command="{Binding NewTagCommand}" Margin="0,0,1,0" VerticalAlignment="Top"/>
-    </Panel>
+    <UserControl.Styles>
+        <Style Selector="Button">
+        <Setter Property="Padding" Value="3,1"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="#ffffff"/>
+        </Style>
+    </UserControl.Styles>
+    <Grid Background="#0F1523" RowDefinitions="auto,*">
+        <agc:GraphPanel Grid.Row="1" Graph="{Binding Graph}" Background="Transparent"  LayoutMethod="SugiyamaScheme" Margin="0,0,0,0" HorizontalAlignment="Center" VerticalAlignment="Center"  x:Name="mainPanel">
+            <agc:GraphPanel.RenderTransform>
+                <TranslateTransform/>
+            </agc:GraphPanel.RenderTransform>
+            <agc:GraphPanel.DataTemplates>
+                <DataTemplate x:DataType="vm:EdgeCloudViewModel">
+                    <c:CloudEdge IsVisible="{Binding !Root}"/>
+                </DataTemplate>
+                <DataTemplate x:DataType="vm:RootCloudViewModel">
+                    <Panel/>
+                </DataTemplate>
+                <DataTemplate x:DataType="vm:TagItemViewModel">
+                    <Border Tapped="Cloud_Tapped" DoubleTapped="Cloud_DoubleTapped" Holding="Cloud_Holding" Background="Transparent" BorderBrush="White" BorderThickness="1" CornerRadius="5">
+                        <Panel Grid.ColumnSpan="6" HorizontalAlignment="Center">
+                            <Border CornerRadius="7" BorderBrush="#FF12D02E" BorderThickness="3" Margin="-4" IsVisible="{Binding Selected.Value, TargetNullValue={x:False}}"/>
+                            <Border CornerRadius="7" BorderBrush="#FF12D02E" BorderThickness="3" Margin="-4" IsVisible="{Binding Tagged.Value, TargetNullValue={x:False}}"/>
+                            <TextBlock IsVisible="{Binding !IsEditing}" Text="{Binding Name}" Margin="5,1" />
+                            <TextBox IsVisible="{Binding IsEditing}" Text="{Binding Name, Mode=TwoWay}" Margin="-1,0" MinWidth="12" />
+                            <Border Background="#ff5534" CornerRadius="12" IsVisible="{Binding IsEditing}" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,-12,-12,0">
+                                <Button Content="🗑" FontSize="20" Command="{Binding #uc.DataContext.DeleteEntityCommand}" CommandParameter="{Binding Tag}"/>
+                            </Border>
+                            <Border Background="#0EBD1F" CornerRadius="12" IsVisible="{Binding IsEditing}" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="-12,-12,0,0">
+                                <Button Content="💾" FontSize="20" Command="{Binding SaveCommand}"/>
+                            </Border>
+                        </Panel>
+                    </Border>
+                </DataTemplate>
+            </agc:GraphPanel.DataTemplates>
+        </agc:GraphPanel>
+        <Border  Background="#0F1523" Padding="5">
+            <Panel Height="28"  ClipToBounds="True">
+                <TextBlock Text="Tagcloud" VerticalAlignment="Center" FontSize="18" FontWeight="500" HorizontalAlignment="Center"/>
+                <Button Foreground="#aaaaaa" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="32" Content="+" FontWeight="300" Padding="3" Command="{Binding NewTagCommand}" Margin="0,-12,3,0"/>
+            </Panel>
+        </Border>
+    </Grid>
 </UserControl>

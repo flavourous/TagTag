@@ -47,7 +47,7 @@
       <Grid RowDefinitions="auto,*" Background="#0F1523">
         <Border Grid.Row="0">
           <Panel>
-            <Border Tapped="Execute_Tag_Command" Tag="{Binding ToggleParentsCommand}" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="7">
+            <Border Background="Transparent" Tapped="Execute_Tag_Command" Tag="{Binding ToggleParentsCommand}" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="7">
               <Panel Margin="5,0">
                 <Panel IsVisible="{Binding !AtRoot}">
                   <TextBlock Text="❮" Classes="ab" IsVisible="{Binding NavigateChildren}"/>

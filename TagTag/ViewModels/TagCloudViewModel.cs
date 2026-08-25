@@ -25,6 +25,14 @@ public sealed partial class TagCloudViewModel(ISourceList<TagItemViewModel> Filt
     public string? UrlPathSegment => throw new NotImplementedException();
     public IScreen HostScreen => throw new NotImplementedException();
 
+    [ReactiveCommand]
+    public void NewTag()
+    {
+        var tag = Eman.CreateEntity<ITag>();
+        tag.name = "new tag";
+        Eman.UpdateEntity(tag);
+    }
+
     [Reactive] private Graph _graph;
     public void SetItems(IEnumerable<IEntityItem<ITag>> items)
     {

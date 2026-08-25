@@ -86,8 +86,9 @@ public sealed partial class MainViewModel : ReactiveObject, IView, IScreen
 
     [ReactiveCommand] public void ToggleParents()
     {
-        if(NavigateChildren && ParentTags.Length == 1) ParentTags.Single().Navigate();
-        if(ParentTags.Length > 1) NavigateChildren = !NavigateChildren;
+        var ll = ParentTags.Length;
+        if(NavigateChildren && ll == 1) ParentTags.Single().Navigate();
+        if(ll > 1) NavigateChildren = !NavigateChildren;
     } 
 
     [ReactiveCommand] public void Cloud() => Router.Navigate.Execute(TagCloud);
@@ -98,14 +99,6 @@ public sealed partial class MainViewModel : ReactiveObject, IView, IScreen
         var note = Eman.CreateEntity<INote>();
         note.name = "new note";
         Eman.UpdateEntity(note);
-    }
-
-    [ReactiveCommand]
-    public void NewTag()
-    {
-        var tag = Eman.CreateEntity<ITag>();
-        tag.name = "new tag";
-        Eman.UpdateEntity(tag);
     }
 
     [ReactiveCommand] public void DeleteEntity(IEntity e) => Eman.DeleteEntity(e);
