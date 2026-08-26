@@ -17,8 +17,9 @@ public partial class MainView : ReactiveUserControl<ViewModels.MainViewModel>
     {
         if (sender is Control { Tag: ICommand c } t)
         {
-            if(c is IReactiveCommand<Unit, object> or IReactiveCommand<Unit, Unit>) c.Execute(Unit.Default);
-            else c.Execute(t.DataContext);
+            if(c is IReactiveCommand<Unit, object> or IReactiveCommand<Unit, Unit>
+                && c.CanExecute(Unit.Default)) c.Execute(Unit.Default);
+            else if(c.CanExecute(t.DataContext)) c.Execute(t.DataContext);
         }
     }
 }

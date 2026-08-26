@@ -103,7 +103,7 @@ public sealed partial class MainViewModel : ReactiveObject, IView, IScreen
     [ReactiveCommand]
     public void Navigate(DetailItemViewModel x)
     {
-        Router.Navigate.Execute(new NoteViewModel(x.EntityItem, Eman, this, Cloud));
+        Router.Navigate.Execute(new NoteViewModel(x.EntityItem, Eman, this, TagCloud));
     }
 
     public void Start() => Presenter.Start(this, platform);

@@ -21,15 +21,18 @@ public sealed partial class TagCloudViewModel(ISourceList<TagItemViewModel> Filt
     public IEntityRepository? Eman { get; set; }
 
     private CompositeDisposable d = [];
-    public bool IsTagging { get; private set; }
+    [Reactive] public bool _isTagging;
+    [Reactive] public bool _canMutate = true;
 
     public string? UrlPathSegment => "";
     public IScreen HostScreen => screen;
 
-    public ICommand Back { get; } = screen.Router.NavigateBack;
+    public ICommand Back { get; } = ReactiveCommand.CreateFromObservable(() => screen.Router.NavigateBack.Execute());
     private RootCloudViewModel Root = new();
 
-    [ReactiveCommand]
+    System.IObservable<bool> CanMutateObservable => this.WhenAnyValue(x => x.CanMutate);
+
+    [ReactiveCommand(CanExecute = nameof(CanMutateObservable))]
     public void NewTag()
     {
         var tag = Eman.CreateEntity<ITag>();
@@ -46,13 +49,13 @@ public sealed partial class TagCloudViewModel(ISourceList<TagItemViewModel> Filt
         else t.Selected.Value = !t.Selected.Value;
     }
 
-    [ReactiveCommand]
+    [ReactiveCommand(CanExecute = nameof(CanMutateObservable))]
     public void Edit(TagItemViewModel t)
     {
         t.Tagging.Value = t.IsEditing = true;
     }
 
-    [ReactiveCommand]
+    [ReactiveCommand(CanExecute = nameof(CanMutateObservable))]
     public void DeleteEntity(IEntity e)
     {
         Eman.DeleteEntity(e);

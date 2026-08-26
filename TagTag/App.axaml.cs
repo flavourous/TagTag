@@ -23,11 +23,15 @@ public partial class App : Application
 
             desktop.MainWindow.PointerPressed += (o, e) =>
             {
-                var props = e.GetCurrentPoint(null).Properties;
-                if (props.IsRightButtonPressed && mainViewModel.Router.NavigationStack.Count > 0)
+                if (!e.GetCurrentPoint(null).Properties.IsRightButtonPressed) return;
+                if(mainViewModel.Router.NavigationStack.Count > 0)
                 {
                     mainViewModel.Router.NavigateBack.Execute();
                     e.Handled = true;
+                }
+                else
+                {
+                    mainViewModel.ToggleParents();
                 }
             };
         }
@@ -42,6 +46,10 @@ public partial class App : Application
                     {
                         mainViewModel.Router.NavigateBack.Execute();
                         e.Handled = true;
+                    }
+                    else
+                    {
+                        mainViewModel.ToggleParents();
                     }
                 };
         }

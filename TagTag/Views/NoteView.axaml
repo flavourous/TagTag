@@ -5,11 +5,6 @@
              x:DataType="vm:NoteViewModel"
              x:Name="uc">
     <UserControl.Styles>
-        <Style Selector="Button">
-            <Setter Property="Padding" Value="3,1"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#ffffff"/>
-        </Style>
         <Style Selector="TextBox">
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="Background" Value="Transparent"/>
@@ -31,9 +26,9 @@
                     <TextBox Text="{Binding Name}" VerticalAlignment="Center" FontSize="18" FontWeight="500"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Foreground="#aaaaaa" FontSize="18" Content="☁" FontWeight="300" Padding="3" Command="{Binding Tag}"/>
-                    <Button Margin="7,0,0,0" Foreground="#aaaaaa" FontSize="18" Content="💾" FontWeight="300" Padding="3" Command="{Binding Save}"/>
-                    <Button Foreground="#aaaaaa" FontSize="21" Command="{Binding Delete}">
+                    <Button FontSize="18" Content="☁" FontWeight="300" Padding="3" Command="{Binding TagCommand}"/>
+                    <Button Margin="7,0,0,0" FontSize="18" Content="💾" FontWeight="300" Padding="3" Command="{Binding SaveCommand}"/>
+                    <Button FontSize="21" Command="{Binding DeleteCommand}">
                         <TextBlock Text="🗙" Margin="3,-1,0,0"/>
                     </Button>
                 </StackPanel>
