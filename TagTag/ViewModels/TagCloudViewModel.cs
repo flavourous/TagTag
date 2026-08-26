@@ -3,6 +3,7 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
+using System.Windows.Input;
 using Avalonia.Controls;
 using AvaloniaGraphControl;
 using DynamicData;
@@ -22,8 +23,11 @@ public sealed partial class TagCloudViewModel(ISourceList<TagItemViewModel> Filt
     private CompositeDisposable d = [];
     public bool IsTagging { get; private set; }
 
-    public string? UrlPathSegment => throw new NotImplementedException();
-    public IScreen HostScreen => throw new NotImplementedException();
+    public string? UrlPathSegment => "";
+    public IScreen HostScreen => screen;
+
+    public ICommand Back { get; } = screen.Router.NavigateBack;
+    private RootCloudViewModel Root = new();
 
     [ReactiveCommand]
     public void NewTag()
@@ -31,6 +35,21 @@ public sealed partial class TagCloudViewModel(ISourceList<TagItemViewModel> Filt
         var tag = Eman.CreateEntity<ITag>();
         tag.name = "new tag";
         Eman.UpdateEntity(tag);
+        var node = NodeLookup[tag];
+        node.Tagging.Value = node.IsEditing = true;
+    }
+
+    [ReactiveCommand]
+    public void Activate(TagItemViewModel t)
+    {
+        if (IsTagging) t.Tagged.Value = !t.Tagged.Value;
+        else t.Selected.Value = !t.Selected.Value;
+    }
+
+    [ReactiveCommand]
+    public void Edit(TagItemViewModel t)
+    {
+        t.Tagging.Value = t.IsEditing = true;
     }
 
     [ReactiveCommand]
@@ -53,8 +72,6 @@ public sealed partial class TagCloudViewModel(ISourceList<TagItemViewModel> Filt
             var vm = new TagItemViewModel(item, Eman);
             NodeLookup[item.entity] = vm;
         }
-
-        var root = new RootCloudViewModel();
         var g = new Graph();
         Func<object, object, int> value = (a, b) =>
         {
@@ -84,7 +101,7 @@ public sealed partial class TagCloudViewModel(ISourceList<TagItemViewModel> Filt
             void AddEdge(EdgeCloudViewModel edge) => g.Edges.Add(edge);
             if (!tag.tags.Any())
             {
-                AddEdge(new(true, root, node));
+                AddEdge(new(true, Root, node));
             }
             foreach (var edge in tag.tags) AddEdge(new(false, NodeLookup[edge], node));
         }

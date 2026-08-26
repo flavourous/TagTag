@@ -52,8 +52,8 @@
                                 </Border>
                             </Panel>
                         </AdornerLayer.Adorner>
-                        <Border Tapped="Cloud_Tapped" DoubleTapped="Cloud_DoubleTapped" Holding="Cloud_Holding">
-                            <Grid HorizontalAlignment="Center" ColumnDefinitions="auto,auto">
+                        <Border DoubleTapped="Execute_Tag_Command" Holding="Execute_Tag_Command" Tag="{Binding #uc.DataContext.EditCommand}">
+                            <Grid HorizontalAlignment="Center" ColumnDefinitions="auto,auto" Tapped="Execute_Tag_Command" Tag="{Binding #uc.DataContext.ActivateCommand}">
                                 <Panel Grid.ColumnSpan="2">
                                     <Border CornerRadius="7" ClipToBounds="True" Background="#262d35" Padding="0,15"  BorderThickness="1.5" BorderBrush="#78494f5d" />
                                     <Border CornerRadius="7" ClipToBounds="True" Background="#4f77a8" Padding="0,15"  BorderThickness="1.5" BorderBrush="#6f95bd" IsVisible="{Binding Selected.Value, TargetNullValue={x:False}}"/>
@@ -61,7 +61,7 @@
                                 </Panel>
                                 <TextBlock Grid.Column="0" Text="🔖" Foreground="#ababab" Margin="9,2,0,0" Classes="ib" VerticalAlignment="Center" />
                                 <TextBlock Grid.Column="1"  FontSize="14" Margin="7,0" VerticalAlignment="Center" Foreground="#ffffff" IsVisible="{Binding !IsEditing}" Text="{Binding Name}" />
-                                <TextBox Grid.Column="1"  FontSize="14" Padding="3,0" Margin="3,0" VerticalAlignment="Center" Foreground="#ffffff" IsVisible="{Binding IsEditing}" Text="{Binding Name, Mode=TwoWay}" MinWidth="12" />
+                                <TextBox PropertyChanged="TextBox_PropertyChanged" Grid.Column="1"  FontSize="14" Padding="3,0" Margin="3,0" VerticalAlignment="Center" Foreground="#ffffff" IsVisible="{Binding IsEditing}" Text="{Binding Name, Mode=TwoWay}" MinWidth="12" />
                             </Grid>
                         </Border>
                     </Panel>
@@ -73,6 +73,9 @@
             <Panel Height="28"  ClipToBounds="True">
                 <TextBlock Text="Tagcloud" VerticalAlignment="Center" FontSize="18" FontWeight="500" HorizontalAlignment="Center"/>
                 <Button Foreground="#aaaaaa" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="32" Content="+" FontWeight="300" Padding="3" Command="{Binding NewTagCommand}" Margin="0,-12,3,0"/>
+                <Border Background="Transparent" Margin="0,-5,0,0" Tapped="Execute_Tag_Command" Tag="{Binding Back}" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="7">
+                    <TextBlock Text="❮" Classes="ab"/>
+                </Border>
             </Panel>
         </Border>
     </Grid>

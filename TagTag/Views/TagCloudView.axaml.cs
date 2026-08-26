@@ -1,6 +1,9 @@
+using System.Reactive;
+using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.VisualTree;
 using ReactiveUI;
@@ -14,42 +17,22 @@ public partial class TagCloudView : ReactiveUserControl<TagCloudViewModel>
 {
     public TagCloudView() => InitializeComponent();
 
-    private void Cloud_Tapped(object? sender, TappedEventArgs e)
+    private void Execute_Tag_Command(object? sender, RoutedEventArgs e)
     {
-        if (sender is Control { DataContext: TagItemViewModel t } && DataContext is TagCloudViewModel vm)
+        if (sender is Control { Tag: ICommand c } t)
         {
-            var anyTagging = vm.IsTagging;
-            if (anyTagging) t.Tagged.Value = !t.Tagged.Value;
-            else t.Selected.Value = !t.Selected.Value;
-        }
-    }
-
-    private void Cloud_Holding(object? sender, HoldingRoutedEventArgs e) => CloudSelect(sender);
-    private void Cloud_DoubleTapped(object? sender, TappedEventArgs e) => CloudSelect(sender);
-    private void CloudSelect(object? sender)
-    {
-        if (sender is Control { DataContext: TagItemViewModel t } c && DataContext is TagCloudViewModel { IsTagging: false })
-        {
-            t.Tagging.Value = t.IsEditing = true;
-            var tb = c.FindDescendantOfType<TextBox>();
-            tb.Focus();
-            tb.SelectAll();
+            if(c is IReactiveCommand<Unit, object> or IReactiveCommand<Unit, Unit>) c.Execute(Unit.Default);
+            else c.Execute(t.DataContext);
         }
     }
 
     private bool _isDragging;
     private Point _startPoint;
 
-    public ReactiveView Reactive { get; } = new();
-    public partial class ReactiveView : ReactiveObject
-    {
-        [Reactive] public double _offsetTrigger = 0.0;
-    }
-
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         var pointerProps = e.GetCurrentPoint(mainPanel).Properties;
-        
+
         // Only drag on left click or primary touch contact
         if (pointerProps.IsLeftButtonPressed)
         {
@@ -66,12 +49,10 @@ public partial class TagCloudView : ReactiveUserControl<TagCloudViewModel>
         {
             var currentPoint = e.GetPosition(this.VisualRoot as Visual);
             var delta = currentPoint - _startPoint;
-            
+
             _startPoint = currentPoint;
             transform.X += delta.X;
             transform.Y += delta.Y;
-
-            Reactive.OffsetTrigger = Reactive.OffsetTrigger == 0.0 ? 0.001 : 0.0;
         }
 
         base.OnPointerMoved(e);
@@ -85,5 +66,15 @@ public partial class TagCloudView : ReactiveUserControl<TagCloudViewModel>
         }
 
         base.OnPointerReleased(e);
+    }
+
+    private void TextBox_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        var tb = sender as TextBox;
+        if(tb.IsVisible)
+        {
+            tb.Focus();
+            tb.SelectAll();
+        }
     }
 }

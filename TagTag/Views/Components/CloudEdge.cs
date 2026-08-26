@@ -22,7 +22,7 @@ public class CloudEdge : Connection
             typeof(Func<AvaloniaGraphControl.Edge, Microsoft.Msagl.Drawing.Edge>), 
             getter
         );
-        Wb = new SolidColorBrush(Avalonia.Media.Color.FromRgb(0x5c,0x60,0x6f));
+        Wb = new SolidColorBrush(Avalonia.Media.Color.FromRgb(0x46, 0x4a, 0x59));
     }
 
     private Microsoft.Msagl.Drawing.Edge MsAglEdge => MsAglEdgeGetter(DataContext as AvaloniaGraphControl.Edge);
