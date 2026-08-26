@@ -22,7 +22,7 @@ public class CloudEdge : Connection
             typeof(Func<AvaloniaGraphControl.Edge, Microsoft.Msagl.Drawing.Edge>), 
             getter
         );
-        Wb = new SolidColorBrush(new Avalonia.Media.Color(50, 200,200,200));
+        Wb = new SolidColorBrush(Avalonia.Media.Color.FromRgb(0x5c,0x60,0x6f));
     }
 
     private Microsoft.Msagl.Drawing.Edge MsAglEdge => MsAglEdgeGetter(DataContext as AvaloniaGraphControl.Edge);
@@ -65,7 +65,7 @@ public class CloudEdge : Connection
     {
         return new GeometryDrawing
         {
-            Pen = new Pen(strokeBrush),
+            Pen = new Pen(strokeBrush, 1.5),
             Brush = fillBrush,
             Geometry = new PathGeometry
             {
@@ -147,9 +147,16 @@ public class CloudEdge : Connection
             {
                 Point = arrowStart
             });
+
+            Microsoft.Msagl.Core.Geometry.Point startDirection = curve.Derivative(curve.ParStart);
+            double startDirectionLength = Math.Sqrt(startDirection.X * startDirection.X + startDirection.Y * startDirection.Y);
+            Microsoft.Msagl.Core.Geometry.Point start = startDirectionLength == 0.0
+                ? curve.Start
+                : curve.Start - startDirection * (5.0 / startDirectionLength);
+
             return new PathFigure
             {
-                StartPoint = Convert(curve.Start),
+                StartPoint = Convert(start),
                 Segments = pathSegments,
                 IsClosed = false,
                 IsFilled = false

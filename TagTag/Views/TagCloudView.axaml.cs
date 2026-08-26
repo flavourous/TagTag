@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using ReactiveUI;
 using ReactiveUI.Avalonia;
 using ReactiveUI.SourceGenerators;
@@ -27,9 +28,12 @@ public partial class TagCloudView : ReactiveUserControl<TagCloudViewModel>
     private void Cloud_DoubleTapped(object? sender, TappedEventArgs e) => CloudSelect(sender);
     private void CloudSelect(object? sender)
     {
-        if (sender is Control { DataContext: TagItemViewModel t } && DataContext is TagCloudViewModel { IsTagging: false })
+        if (sender is Control { DataContext: TagItemViewModel t } c && DataContext is TagCloudViewModel { IsTagging: false })
         {
             t.Tagging.Value = t.IsEditing = true;
+            var tb = c.FindDescendantOfType<TextBox>();
+            tb.Focus();
+            tb.SelectAll();
         }
     }
 

@@ -53,22 +53,23 @@
                             </Panel>
                         </AdornerLayer.Adorner>
                         <Border Tapped="Cloud_Tapped" DoubleTapped="Cloud_DoubleTapped" Holding="Cloud_Holding">
-                            <Panel Grid.ColumnSpan="6" HorizontalAlignment="Center">
-                                <Panel>
-                                    <Border CornerRadius="5" ClipToBounds="True" Background="#25bababa" Padding="0,17" />
-                                    <Border CornerRadius="3" ClipToBounds="True" Background="#4E5668" Padding="0,17" IsVisible="{Binding Selected.Value, TargetNullValue={x:False}}"/>
-                                    <Border CornerRadius="3" ClipToBounds="True" Background="#4E5668" Padding="0,17" IsVisible="{Binding Tagged.Value, TargetNullValue={x:False}}"/>
+                            <Grid HorizontalAlignment="Center" ColumnDefinitions="auto,auto">
+                                <Panel Grid.ColumnSpan="2">
+                                    <Border CornerRadius="7" ClipToBounds="True" Background="#262d35" Padding="0,15"  BorderThickness="1.5" BorderBrush="#78494f5d" />
+                                    <Border CornerRadius="7" ClipToBounds="True" Background="#4f77a8" Padding="0,15"  BorderThickness="1.5" BorderBrush="#6f95bd" IsVisible="{Binding Selected.Value, TargetNullValue={x:False}}"/>
+                                    <Border CornerRadius="7" ClipToBounds="True" Background="#4f77a8" Padding="0,15"  BorderThickness="1.5" BorderBrush="#6f95bd" IsVisible="{Binding Tagged.Value, TargetNullValue={x:False}}"/>
                                 </Panel>
-                                <TextBlock Margin="11,0" VerticalAlignment="Center" Foreground="#adadad" IsVisible="{Binding !IsEditing}" Text="{Binding Name}" />
-                                <TextBox Padding="7,5" Margin="3,0" VerticalAlignment="Center" Foreground="#adadad" IsVisible="{Binding IsEditing}" Text="{Binding Name, Mode=TwoWay}" MinWidth="12" />
-                            </Panel>
+                                <TextBlock Grid.Column="0" Text="🔖" Foreground="#ababab" Margin="9,2,0,0" Classes="ib" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1"  FontSize="14" Margin="7,0" VerticalAlignment="Center" Foreground="#ffffff" IsVisible="{Binding !IsEditing}" Text="{Binding Name}" />
+                                <TextBox Grid.Column="1"  FontSize="14" Padding="3,0" Margin="3,0" VerticalAlignment="Center" Foreground="#ffffff" IsVisible="{Binding IsEditing}" Text="{Binding Name, Mode=TwoWay}" MinWidth="12" />
+                            </Grid>
                         </Border>
                     </Panel>
                 </DataTemplate>
             </agc:GraphPanel.DataTemplates>
         </agc:GraphPanel>
         </VisualLayerManager>
-        <Border  Background="#0F1523" Padding="5">
+        <Border Background="#0F1523" Padding="5">
             <Panel Height="28"  ClipToBounds="True">
                 <TextBlock Text="Tagcloud" VerticalAlignment="Center" FontSize="18" FontWeight="500" HorizontalAlignment="Center"/>
                 <Button Foreground="#aaaaaa" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="32" Content="+" FontWeight="300" Padding="3" Command="{Binding NewTagCommand}" Margin="0,-12,3,0"/>
