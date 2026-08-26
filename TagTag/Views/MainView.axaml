@@ -113,7 +113,7 @@
             <ItemsControl ItemsSource="{Binding DetailItems}" BorderBrush="#232c3b" BorderThickness="0,0,0,0">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                  <Border Height="81"> 
+                  <Border Height="81" Background="Transparent" Tapped="Execute_Tag_Command" Tag="{Binding #uc.DataContext.NavigateCommand}">
                       <Grid RowDefinitions="auto,*" ColumnDefinitions="auto,*,auto" ColumnSpacing="7" RowSpacing="5" Margin="9">
                         <Separator IsVisible="{Binding !IsFirst}" Grid.ColumnSpan="3" VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="-9,-14,-9,0"/>
                         <TextBlock Grid.Column="0" Text="🗎" Classes="ib" VerticalAlignment="Center" Margin="0"/>

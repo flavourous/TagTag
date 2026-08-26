@@ -29,8 +29,6 @@ public sealed partial class MainViewModel : ReactiveObject, IView, IScreen
 
     public RoutingState Router { get; } = new();
 
-    public bool IsTagging { get; private set; }
-
     private CompositeDisposable d = [];
     private readonly IPlatform platform;
     private Dictionary<ITag, TagItemViewModel> nodes = [];
@@ -102,7 +100,11 @@ public sealed partial class MainViewModel : ReactiveObject, IView, IScreen
         Eman.UpdateEntity(note);
     }
 
-    [ReactiveCommand] public void DeleteEntity(IEntity e) => Eman.DeleteEntity(e);
+    [ReactiveCommand]
+    public void Navigate(DetailItemViewModel x)
+    {
+        Router.Navigate.Execute(new NoteViewModel(x.EntityItem, Eman, this, Cloud));
+    }
 
     public void Start() => Presenter.Start(this, platform);
 
@@ -110,18 +112,11 @@ public sealed partial class MainViewModel : ReactiveObject, IView, IScreen
     {
         d.Dispose();
         d = [];
-        IsTagging = false;
 
         var tags = items.Where(x => x.entity is ITag).ToArray();
         var entries = items.Where(x => x.entity is not ITag).ToArray();
 
-        var detailItems = entries.Select((x, i) => new DetailItemViewModel(x, Eman, i == 0 && !tags.Any())).ToArray();
-        foreach (var entity in detailItems)
-        {
-            entity.Tagging.WhenAny(x => x.Value, x => x)
-                .Subscribe(v => IsTagging = v.Value ?? IsTagging)
-                .DisposeWith(d);
-        }
+        var detailItems = entries.Select((x, i) => new DetailItemViewModel(x, i == 0 && !tags.Any())).ToArray();
         DetailItems.Clear();
         DetailItems.AddRange(detailItems);
 

@@ -6,10 +6,9 @@ using TagTag.Backend;
 
 namespace TagTag.ViewModels;
 
-public sealed partial class DetailItemViewModel(IEntityItem<IEntity> entityItem, IEntityRepository man, bool isFirst) : ReactiveObject
+public sealed partial class DetailItemViewModel(IEntityItem<IEntity> entityItem, bool isFirst) : ReactiveObject
 {
-    public EntityObservableViewModel<bool?> Tagging { get; } = new(entityItem.tagging);
-    public string Name { get; set; } = string.IsNullOrWhiteSpace(entityItem.entity.name) ? "<empty>" : entityItem.entity.name;
+    public string Name { get; set; } = entityItem.entity.name;
     public string Date => entityItem.entity.created.ToString("d");
     public string Text { get; set; } = entityItem.entity switch
     {
@@ -18,6 +17,7 @@ public sealed partial class DetailItemViewModel(IEntityItem<IEntity> entityItem,
     };
     public bool HasText => !string.IsNullOrWhiteSpace(Text);
 
+    public IEntityItem<IEntity> EntityItem { get; } = entityItem;
     public bool IsFirst { get; } = isFirst;
 
     private static string LineElipsis(string text)

@@ -71,7 +71,7 @@ public partial class TagCloudView : ReactiveUserControl<TagCloudViewModel>
     private void TextBox_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
         var tb = sender as TextBox;
-        if(tb.IsVisible)
+        if(tb.IsVisible && e.Property == TextBox.IsVisibleProperty)
         {
             tb.Focus();
             tb.SelectAll();

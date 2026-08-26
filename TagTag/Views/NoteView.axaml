@@ -1,0 +1,47 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:TagTag.ViewModels"
+             x:Class="TagTag.Views.NoteView"
+             x:DataType="vm:NoteViewModel"
+             x:Name="uc">
+    <UserControl.Styles>
+        <Style Selector="Button">
+            <Setter Property="Padding" Value="3,1"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#ffffff"/>
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Style Selector="^:focus /template/ Border#PART_BorderElement">
+                <Setter Property="BorderBrush" Value="Transparent"/>
+                <Setter Property="Background" Value="Transparent"/>
+            </Style>
+            <Style Selector="^:pointerover /template/ Border#PART_BorderElement">
+                <Setter Property="BorderBrush" Value="Transparent"/>
+                <Setter Property="Background" Value="Transparent"/>
+            </Style>
+        </Style>
+    </UserControl.Styles>
+    <Grid Background="#0F1523" RowDefinitions="auto,*">
+        <Border Background="#0F1523" Padding="5">
+            <Panel Height="28"  ClipToBounds="True">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Margin="-24,0,0,0" Text="🗎" Classes="ib" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding Name}" VerticalAlignment="Center" FontSize="18" FontWeight="500"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Foreground="#aaaaaa" FontSize="18" Content="☁" FontWeight="300" Padding="3" Command="{Binding Tag}"/>
+                    <Button Margin="7,0,0,0" Foreground="#aaaaaa" FontSize="18" Content="💾" FontWeight="300" Padding="3" Command="{Binding Save}"/>
+                    <Button Foreground="#aaaaaa" FontSize="21" Command="{Binding Delete}">
+                        <TextBlock Text="🗙" Margin="3,-1,0,0"/>
+                    </Button>
+                </StackPanel>
+                <Border Background="Transparent" Margin="0,-5,0,0" Tapped="Execute_Tag_Command" Tag="{Binding Back}" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="7">
+                    <TextBlock Text="❮" Classes="ab"/>
+                </Border>
+            </Panel>
+        </Border>
+        <TextBox Margin="24,0" Grid.Row="1" Text="{Binding Text}" LineHeight="20" FontWeight="ExtraLight" AcceptsReturn="True" AcceptsTab="True"/>
+    </Grid>
+</UserControl>
