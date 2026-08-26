@@ -2,7 +2,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using ReactiveUI;
 using ReactiveUI.Avalonia;
+using ReactiveUI.SourceGenerators;
 using TagTag.ViewModels;
 
 namespace TagTag.Views;
@@ -25,14 +27,20 @@ public partial class TagCloudView : ReactiveUserControl<TagCloudViewModel>
     private void Cloud_DoubleTapped(object? sender, TappedEventArgs e) => CloudSelect(sender);
     private void CloudSelect(object? sender)
     {
-        if (sender is Control { DataContext: TagItemViewModel t })
+        if (sender is Control { DataContext: TagItemViewModel t } && DataContext is TagCloudViewModel { IsTagging: false })
         {
-            t.Tagging.Value = t.IsEditing = !t.IsEditing;
+            t.Tagging.Value = t.IsEditing = true;
         }
     }
 
     private bool _isDragging;
     private Point _startPoint;
+
+    public ReactiveView Reactive { get; } = new();
+    public partial class ReactiveView : ReactiveObject
+    {
+        [Reactive] public double _offsetTrigger = 0.0;
+    }
 
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
@@ -58,6 +66,8 @@ public partial class TagCloudView : ReactiveUserControl<TagCloudViewModel>
             _startPoint = currentPoint;
             transform.X += delta.X;
             transform.Y += delta.Y;
+
+            Reactive.OffsetTrigger = Reactive.OffsetTrigger == 0.0 ? 0.001 : 0.0;
         }
 
         base.OnPointerMoved(e);

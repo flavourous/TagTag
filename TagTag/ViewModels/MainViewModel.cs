@@ -60,6 +60,7 @@ public sealed partial class MainViewModel : ReactiveObject, IView, IScreen
 
                   AtRoot = !filtered.Any();
                   AtMultiple = filtered.Count() > 1;
+                  if(AtRoot) NavigateChildren = true;
 
                   ParentTags = (filtered.Any(), parents.Any()) switch
                   {

@@ -33,6 +33,12 @@ public sealed partial class TagCloudViewModel(ISourceList<TagItemViewModel> Filt
         Eman.UpdateEntity(tag);
     }
 
+    [ReactiveCommand]
+    public void DeleteEntity(IEntity e)
+    {
+        Eman.DeleteEntity(e);
+    }
+
     [Reactive] private Graph _graph;
     public void SetItems(IEnumerable<IEntityItem<ITag>> items)
     {
@@ -42,7 +48,7 @@ public sealed partial class TagCloudViewModel(ISourceList<TagItemViewModel> Filt
         Filter.Clear();
         NodeLookup.Clear();
 
-        foreach(var item in items)
+        foreach (var item in items)
         {
             var vm = new TagItemViewModel(item, Eman);
             NodeLookup[item.entity] = vm;
@@ -50,6 +56,18 @@ public sealed partial class TagCloudViewModel(ISourceList<TagItemViewModel> Filt
 
         var root = new RootCloudViewModel();
         var g = new Graph();
+        Func<object, object, int> value = (a, b) =>
+        {
+            if (a is TagItemViewModel at && b is TagItemViewModel bt)
+            {
+                var ia = at.Tag.tags.Any() ? 1 : 0;
+                var ib = bt.Tag.tags.Any() ? 1 : 0;
+                return ia - ib;
+            }
+            return 0;
+        };
+        g.HorizontalOrder = value;
+
         foreach (var (tag, node) in NodeLookup)
         {
             node.WhenAnyValue(x => x.Tagging.Value)
@@ -64,7 +82,10 @@ public sealed partial class TagCloudViewModel(ISourceList<TagItemViewModel> Filt
                 .DisposeWith(d);
 
             void AddEdge(EdgeCloudViewModel edge) => g.Edges.Add(edge);
-            if (!tag.tags.Any()) AddEdge(new(true, root, node));
+            if (!tag.tags.Any())
+            {
+                AddEdge(new(true, root, node));
+            }
             foreach (var edge in tag.tags) AddEdge(new(false, NodeLookup[edge], node));
         }
 
